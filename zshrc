@@ -9,7 +9,7 @@ export TERM=xterm-256color
 #ZSH_THEME="bullet-train"
 ZSH_THEME="spaceship"
 SPACESHIP_DIR_COLOR="blue"
-SPACESHIP_CHAR_SYMBOL="$ "
+SPACESHIP_CHAR_SYMBOL="> "
 
 
 # Uncomment the following line to use case-sensitive completion.
