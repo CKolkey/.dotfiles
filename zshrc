@@ -6,11 +6,16 @@ export TERM=xterm-256color
 # Look in ~/.oh-my-zsh/themes/
 # Optionally, if you set this to "random", it'll load a random theme each
 # time that oh-my-zsh is loaded.
-#ZSH_THEME="bullet-train"
-ZSH_THEME="spaceship"
 SPACESHIP_DIR_COLOR="blue"
 SPACESHIP_CHAR_SYMBOL="> "
-
+SPACESHIP_GIT_PREFIX=""
+SPACESHIP_GIT_SYMBOL="• "
+SPACESHIP_GIT_STATUS_PREFIX=" "
+SPACESHIP_GIT_STATUS_SUFFIX=""
+SPACESHIP_PROMPT_DEFAULT_PREFIX=" "
+SPACESHIP_RUBY_SYMBOL="  "
+SPACESHIP_EXEC_TIME_PREFIX="("
+SPACESHIP_EXEC_TIME_SUFFIX=")"
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -92,8 +97,12 @@ export EDITOR='vim'
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-alias lsa="exa -a --color=always -l -s=name"
-alias ls="exa"
+alias ls='lsd'
+alias l='ls -l'
+alias la='ls -a'
+alias lla='ls -la'
+alias lt='ls --tree'
+
 alias gpom="git pull origin master"
 alias gpou='git push -u origin'
 alias gmm="git merge master"
@@ -104,6 +113,7 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 alias ip="curl ipinfo.io/ip"
 alias ips="ifconfig -a | perl -nle'/(\d+\.\d+\.\d+\.\d+)/ && print $1'"
 alias speedtest="wget -O /dev/null http://speedtest.wdc01.softlayer.com/downloads/test10.zip"
+alias sha256="openssl dgst -sha256"
 
 # Overmind:
 alias os="overmind start"
@@ -145,3 +155,7 @@ compinit
 kitty + complete setup zsh | source /dev/stdin
 
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+
+# Set Spaceship ZSH as a prompt
+autoload -U promptinit; promptinit
+prompt spaceship
