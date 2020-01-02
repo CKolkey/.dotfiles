@@ -9,7 +9,7 @@ export TERM=xterm-256color
 SPACESHIP_DIR_COLOR="blue"
 SPACESHIP_CHAR_SYMBOL="> "
 SPACESHIP_GIT_PREFIX=""
-SPACESHIP_GIT_SYMBOL="• "
+SPACESHIP_GIT_SYMBOL="\e[39m• \e[35m"
 SPACESHIP_GIT_STATUS_PREFIX=" "
 SPACESHIP_GIT_STATUS_SUFFIX=""
 SPACESHIP_PROMPT_DEFAULT_PREFIX=" "
@@ -97,6 +97,7 @@ export EDITOR='vim'
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+alias v='vim'
 alias ls='lsd'
 alias l='ls -l'
 alias la='ls -a'
@@ -155,6 +156,8 @@ compinit
 kitty + complete setup zsh | source /dev/stdin
 
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+
+export FZF_DEFAULT_COMMAND='rg --files --no-ignore --hidden --follow --glob "!.git/*"'
 
 # Set Spaceship ZSH as a prompt
 autoload -U promptinit; promptinit
