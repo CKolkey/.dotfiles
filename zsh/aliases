@@ -1,0 +1,36 @@
+alias zshconfig="v ~/.zshrc"
+alias ohmyzsh="v ~/.oh-my-zsh"
+
+alias v='nvim'
+alias ls='lsd'
+alias l='ls -lA --group-dirs first'
+alias -- -='cd -'
+
+alias gpom="git pull origin master"
+alias gpou='git push -u origin'
+alias gmm="git merge master"
+alias gc="git commit -v -m"
+alias gco="git checkout"
+
+alias ip="curl ipinfo.io/ip"
+alias ips="ifconfig -a | perl -nle'/(\d+\.\d+\.\d+\.\d+)/ && print $1'"
+alias speedtest="wget -O /dev/null http://speedtest.wdc01.softlayer.com/downloads/test10.zip"
+alias sha256="openssl dgst -sha256"
+
+# Overmind:
+alias os="overmind start"
+alias oc="overmind connect"
+alias or="overmind restart"
+
+# Quickly serve the current directory as HTTP
+alias serve='ruby -run -e httpd . -p 8000'  # Or python -m SimpleHTTPServer :)
+
+alias rrf='rails routes | fzf'
+
+alias chip="cd ~/Code/Principium/Chipmunk"
+alias killruby='pkill -f ruby'
+alias rc='bin/rails console'
+alias herokyu="heroku"
+alias production-console="production run rails c"
+
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"

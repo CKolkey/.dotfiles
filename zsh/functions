@@ -1,0 +1,6 @@
+# Show contents of directory after cd-ing into it
+chpwd() {
+  lsd -A --group-dirs first
+}
+
+
