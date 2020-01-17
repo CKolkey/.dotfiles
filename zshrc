@@ -15,6 +15,7 @@ plugins=(
 
 # User configuration
 export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 export EDITOR='nvim'
 export ZSH=$HOME/.oh-my-zsh
 export TERM=xterm-256color
@@ -25,14 +26,6 @@ source $HOME/.dotfiles/zsh/aliases
 source $HOME/.dotfiles/zsh/functions
 source $HOME/.dotfiles/zsh/prompt
 source $HOME/Library/Preferences/org.dystroy.broot/launcher/bash/br
-
-# Load rbenv if installed
-export PATH="~/.rbenv/shims:${HOME}/.rbenv/bin:${PATH}"
-export PATH="/usr/local/opt/python/libexec/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/opt/ruby/bin:$PATH"
-export PATH="/usr/local/opt/sqlite/bin:$PATH"
-export PATH="/usr/local/opt/curl/bin:$PATH"
-export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
-export PATH="./bin:./node_modules/.bin:${PATH}:/usr/local/sbin"
 
 # heroku autocomplete setup
 HEROKU_AC_ZSH_SETUP_PATH=/Users/Cameron/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH
@@ -49,5 +42,12 @@ export FZF_DEFAULT_COMMAND='rg --files --no-ignore --hidden --follow --glob "!.g
 # Update hombrew once a week
 export HOMEBREW_AUTO_UPDATE_SECS=600000
 
-# RBENV
-eval "$(rbenv init -)"
+# Load rbenv if installed
+# export PATH="${HOME}/.rbenv/bin:${PATH}"
+type -a rbenv > /dev/null && eval "$(rbenv init -)"
+
+export PATH="/usr/local/opt/python/libexec/bin:$PATH"
+export PATH="/usr/local/opt/sqlite/bin:$PATH"
+export PATH="/usr/local/opt/curl/bin:$PATH"
+export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+export PATH="./bin:./node_modules/.bin:${PATH}:/usr/local/sbin"
