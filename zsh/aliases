@@ -1,16 +1,19 @@
+alias aliases="v ~/.dotfiles/zsh/aliases"
+
 alias zshconfig="v ~/.zshrc"
 alias ohmyzsh="v ~/.oh-my-zsh"
 
 alias v='nvim'
 alias ls='lsd'
-alias l='ls -lA --group-dirs first'
+alias ll='ls -lA --group-dirs first'
 alias -- -='cd -'
 
 alias gpom="git pull origin master"
 alias gpou='git push -u origin'
 alias gmm="git merge master"
-alias gc="git commit -v -m"
+alias gc="git commit"
 alias gco="git checkout"
+alias amend="git commit -ammend"
 
 alias ip="curl ipinfo.io/ip"
 alias ips="ifconfig -a | perl -nle'/(\d+\.\d+\.\d+\.\d+)/ && print $1'"
@@ -32,5 +35,6 @@ alias killruby='pkill -f ruby'
 alias rc='bin/rails console'
 alias herokyu="heroku"
 alias production-console="production run rails c"
+alias music="cmus"
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
