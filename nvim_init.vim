@@ -495,13 +495,13 @@
   colorscheme onedark
 
   " Custom Italics
-  highlight htmlArg   cterm=italic
-  highlight Comment   cterm=italic
-  highlight Type      cterm=italic
-  highlight sassClass cterm=italic
-  highlight slimClass cterm=italic ctermfg=YELLOW
-  highlight slimId    cterm=italic
-  highlight slimAttr  cterm=italic
+  highlight htmlArg   gui=italic
+  highlight Comment   gui=italic
+  highlight Type      gui=italic
+  highlight sassClass gui=italic
+  highlight slimClass gui=italic guifg=#ffe082
+  highlight slimId    gui=italic guifg=#82AAFF
+  highlight slimAttr  gui=italic
   let &t_ZH="\e[3m"
   let &t_ZR="\e[23m"
 
