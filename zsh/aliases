@@ -1,6 +1,7 @@
 alias aliases="v ~/.dotfiles/zsh/aliases"
+alias kittyconf="v ~/.dotfiles/kitty.conf"
 
-alias zshconfig="v ~/.zshrc"
+alias zshrc="v ~/.zshrc"
 alias ohmyzsh="v ~/.oh-my-zsh"
 
 alias v='nvim'
@@ -29,6 +30,9 @@ alias or="overmind restart"
 alias serve='ruby -run -e httpd . -p 8000'  # Or python -m SimpleHTTPServer :)
 
 alias rrf='rails routes | fzf'
+
+alias fzfi='rg --files --hidden --follow --no-ignore-vcs -g "!{node_modules,.git}" | fzf'
+alias vf='v $(fzfi)'
 
 alias chip="cd ~/Code/Principium/Chipmunk"
 alias killruby='pkill -f ruby'
