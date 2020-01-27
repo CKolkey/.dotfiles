@@ -7,15 +7,18 @@
   endif
 
   call plug#begin()
+    Plug 'joshdick/onedark.vim'
+
     Plug 'chrisbra/Colorizer'
     Plug 'dense-analysis/ale'
-    Plug 'neoclide/coc.nvim', {'tag': '*', 'branch': 'release'}
+    Plug 'neoclide/coc.nvim', { 'tag': '*', 'branch': 'release' }
     Plug 'sheerun/vim-polyglot'
     Plug 'andymass/vim-matchup'
+    Plug 'airblade/vim-gitgutter'
+    Plug 'jiangmiao/auto-pairs'
     Plug 'junegunn/vim-easy-align'
-    Plug 'ludovicchabant/vim-gutentags'
-
     Plug 'AndrewRadev/splitjoin.vim'
+    Plug 'ludovicchabant/vim-gutentags'
 
     Plug 'scrooloose/nerdtree'
     Plug 'ryanoasis/vim-devicons'
@@ -35,14 +38,10 @@
     Plug 'tpope/vim-sensible'
     Plug 'tpope/vim-surround'
     Plug 'tpope/vim-commentary'
-
-    " Plug 'tpope/vim-dispatch'
-    " Plug 'raimondi/delimitmate'
   call plug#end()
 " }}}
 
 " General Settings {{{
-
   filetype plugin indent on
   set cursorline            " Highlight cursor line
   set number                " Show line number
@@ -50,8 +49,8 @@
   set noshowmode            " Status line makes this unneeded
   set numberwidth=5
   set backspace=indent,eol,start
-  set tabstop=2 
-  set shiftwidth=2 
+  set tabstop=2
+  set shiftwidth=2
   set expandtab
   set shiftround            " Use multiple of shiftwidth when indenting with > and <
   set autoindent
@@ -67,7 +66,7 @@
   set pastetoggle=<F2>
   set noswapfile
   " set textwidth=80
-  set colorcolumn=+1
+  " set colorcolumn=+1
   set splitbelow            " split below, not above
   set splitright            " split right, not left
   set foldmethod=marker     " Fold code between {{{ and }}}
@@ -132,22 +131,11 @@
 " }}}
 
 " Key Mappings {{{
-  " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
   let mapleader = "\<Space>"
-
-  " Yank to System Clipboard
-  vmap '' :w !pbcopy<CR><CR>
 
   nmap <leader>vi :tabe $MYVIMRC<cr>
   nmap <leader>so :source $MYVIMRC<cr>
   nmap <leader>bp obinding.pry<esc>:w<cr>H
-
-" Switch between the last two files
-  nnoremap <S-Space><S-Space> <C-^>
-
-  " Escape from insert mode with jj
-  imap jk <esc>
-  imap kj <esc>
 
   " normal mode command to write file should work in insert mode because
   " I forget to hit escape
@@ -238,24 +226,24 @@
   nnoremap <f10> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans <' . synIDattr(synID(line("."),col("."),0),"name") . "> lo <" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<cr>
 
   " Plugin Mappings
-  map - :NERDTreeToggle<CR>
+  nmap - :NERDTreeToggle<CR>
   nnoremap ]r :ALENextWrap<CR>
   nnoremap [r :ALEPreviousWrap<CR>
   nnoremap <c-t> :Tags<cr>
   nnoremap <c-g> :RG<cr>
-  nnoremap <silent><c-f> :call fzf#vim#files('.', {'options': '--prompt ""'})<CR> 
+  nnoremap <silent><c-f> :call Fzf_dev()<CR>
   nnoremap <c-b> :Buffers<cr>
   xmap ga <Plug>(EasyAlign)
   nmap ga <Plug>(EasyAlign)
   nnoremap <silent> <Leader>t  :TestFile<CR>
   nnoremap <silent> <Leader>a  :TestSuite<CR>
-  nmap <Leader>, gcc 
+  nmap <Leader>, gcc
   nmap sj :SplitjoinSplit<cr>
   nmap sk :SplitjoinJoin<cr>
 
-  " COC - enter selects completion - https://github.com/tpope/vim-endwise/issues/22
-  inoremap <expr> <Plug>CustomCocCR pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
-  imap <CR> <Plug>CustomCocCR<Plug>DiscretionaryEnd
+  " Remaps enter to select item in Pop up menu
+  inoremap <expr> <CR> pumvisible() ? "\<C-Y>" : "\<CR>"
+
   " COC - Remap keys for gotos
   nmap <silent> gd <Plug>(coc-definition)
   nmap <silent> gy <Plug>(coc-type-definition)
@@ -287,14 +275,16 @@
 " }}}
 
 " Plugin Settings {{{
+" AUTOPAIRS {{{
+  au FileType erb let b:AutoPairs = AutoPairsDefine({'<%' : '%>', '<%=' : '%>'})
+  " let g:AutoPairsMapCR = 0
+  " let g:AutoPairsMapBS = 0
+" }}}
   " TEST {{{
     let test#strategy = "neovim"
   " }}}
-  " ENDWISE {{{
-    let g:endwise_no_mappings = v:true
-  " }}}
   " FZF{{{
-    let $FZF_DEFAULT_COMMAND = 'rg --files --no-ignore-vcs --hidden'
+    let $FZF_DEFAULT_COMMAND = 'rg --files --no-ignore-vcs --hidden -g "!{node_modules,.git}"'
     let $FZF_DEFAULT_OPTS=' --color=dark --color=fg:15,bg:-1,hl:1,fg+:#ffffff,bg+:0,hl+:1 --color=info:0,prompt:0,pointer:12,marker:4,spinner:11,header:-1 --layout=reverse  --margin=1,4'
     let g:fzf_layout = { 'window': 'call FloatingFZF()' }
     let g:fzf_action = {
@@ -316,12 +306,6 @@
           \ 'spinner': ['fg', 'Label'],
           \ 'header':  ['fg', 'Comment'] }
 
-    " augroup fzf
-    "   autocmd!
-    "   autocmd! FileType fzf
-    "   autocmd  FileType fzf set laststatus=0 noshowmode noruler
-    "     \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
-    " augroup END
 
     function! RipgrepFzf(query, fullscreen)
       let command_fmt = 'rg --column --line-number --no-heading --color=always --smart-case %s || true'
@@ -335,11 +319,10 @@
     function! FloatingFZF()
       let buf = nvim_create_buf(v:false, v:true)
       call setbufvar(buf, '&signcolumn', 'no')
-
-      let height = float2nr(27)
+      let height = float2nr(25)
       let width = float2nr(&columns * 0.9)
       let horizontal = float2nr((&columns - width) / 2)
-      let vertical = 5
+      let vertical = 3
       let opts = {
             \ 'relative': 'editor',
             \ 'row': vertical,
@@ -348,8 +331,41 @@
             \ 'height': height,
             \ 'style': 'minimal'
             \ }
-
       call nvim_open_win(buf, v:true, opts)
+    endfunction
+
+    " Files + devicons + floating fzf
+    function! Fzf_dev()
+      let l:fzf_files_options = '--preview "bat --theme="TwoDark" --style=numbers,changes --color always {2..-1} | head -'.&lines.'"'
+      function! s:files()
+        let l:files = split(system($FZF_DEFAULT_COMMAND), '\n')
+        return s:prepend_icon(l:files)
+      endfunction
+
+      function! s:prepend_icon(candidates)
+        let l:result = []
+        for l:candidate in a:candidates
+          let l:filename = fnamemodify(l:candidate, ':p:t')
+          let l:icon = WebDevIconsGetFileTypeSymbol(l:filename, isdirectory(l:filename))
+          call add(l:result, printf('%s %s', l:icon, l:candidate))
+        endfor
+
+        return l:result
+      endfunction
+
+      function! s:edit_file(item)
+        let l:pos = stridx(a:item, ' ')
+        let l:file_path = a:item[pos+1:-1]
+        execute 'silent e' l:file_path
+      endfunction
+
+      call fzf#run({
+            \ 'source': <sid>files(),
+            \ 'sink':   function('s:edit_file'),
+            \ 'options': '-m --reverse ' . l:fzf_files_options,
+            \ 'down':    '40%',
+            \ 'window': 'call FloatingFZF()'})
+
     endfunction
   "}}}
   " AIRLINE{{{
@@ -368,6 +384,7 @@
     let g:airline#extensions#tabline#left_alt_sep = '|'
   "}}}
   " NERDTREE{{{
+    let g:NERDTreeWinSize=60
     let NERDTreeShowHidden=1
     let NERDTreeMinimalUI = 1
     autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
@@ -407,35 +424,38 @@
     \   'ruby': ['rubocop'],
     \}
 
+    let g:ale_fixers = {
+            \'*': ['remove_trailing_lines', 'trim_whitespace'],
+            \'javascript': ['prettier'],
+            \'css' : ['prettier'],
+            \'html' : ['prettier'],
+            \'markdown' : ['prettier'],
+            \'yaml': ['prettier'],
+            \'json': ['prettier'],
+            \'ruby': ['rubocop'],
+            \}
+
+    let g:ale_fix_on_save = 1
     let g:ale_linters_explicit = 1
     let g:ale_sign_column_always = 1
-    let g:ale_set_highlights = 0
+    " let g:ale_set_highlights = 0
     let g:ale_sign_error = '>>'
     let g:ale_sign_warning = '!'
 
-    augroup ale
-      autocmd!
-      " let g:has_async = v:version >= 800 || has('nvim')
-      if v:version >= 800 || has('nvim')
-        autocmd VimEnter *
-          \ set updatetime=1000 |
-          \ let g:ale_lint_on_text_changed = 0
-        autocmd CursorHold * call ale#Queue(0)
-        autocmd CursorHoldI * call ale#Queue(0)
-        autocmd InsertEnter * call ale#Queue(0)
-        autocmd InsertLeave * call ale#Queue(0)
-      else
-        echoerr "The thoughtbot dotfiles require NeoVim or Vim 8"
-      endif
-    augroup END
+    " Lint always in Normal Mode
+    let g:ale_lint_on_text_changed = 'normal'
+
+    " Lint when leaving Insert Mode but don't lint when in Insert Mode
+    let g:ale_lint_on_insert_leave = 1
+
+    " Set ALE's 200ms delay to zero
+    let g:ale_lint_delay = 0
   "}}}
   " MATCHUP{{{
     augroup matchup_matchparen_highlight
       autocmd!
-      " autocmd ColorScheme * hi MatchParen guifg=#1d2127 guibg=#60aeed
-      " autocmd ColorScheme * hi MatchWord  guifg=#1d2127 guibg=#c678dd
-      autocmd ColorScheme * hi MatchParen guifg=#c678dd guibg=#1c2026 gui=NONE
-      autocmd ColorScheme * hi MatchWord guifg=#82aaff gui=italic
+      autocmd ColorScheme * hi MatchParen guifg=#c678dd gui=bold
+      autocmd ColorScheme * hi MatchWord guifg=#FFCB6B gui=italic
     augroup END
     let g:matchup_surround_enabled = 1
     let g:matchup_matchparen_deferred = 1
@@ -478,6 +498,9 @@
     " use `:OR` for organize import of current buffer
     command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')"
   " }}}
+  " ENDWISE {{{
+    let g:endwise_no_mappings=1
+  " }}}
 " }}}
 
 " Language Settings {{{
@@ -488,8 +511,40 @@
 " }}}
 
 " Colorscheme & Highlights {{{
+  if (has("autocmd") && !has("gui_running"))
+    augroup colorset
+      autocmd!
+      let s:yellow      = { "gui": "#FFE082", "cterm": "180", "cterm16": "3" }
+      let s:purple      = { "gui": "#C792EA", "cterm": "170", "cterm16": "5" }
+      let s:blue        = { "gui": "#82AAFF", "cterm": "39", "cterm16": "4" }
+      let s:red         = { "gui": "#E06C75", "cterm": "204", "cterm16": "1" }
+      let s:dark_yellow = { "gui": "#FFCB6B", "cterm": "173", "cterm16": "11" }
+
+      autocmd ColorScheme * call onedark#set_highlight("Constant", { "fg": s:yellow })
+      autocmd ColorScheme * call onedark#set_highlight("Statement", { "fg": s:blue })
+      autocmd ColorScheme * call onedark#set_highlight("Macro", { "fg": s:blue })
+      autocmd ColorScheme * call onedark#set_highlight("CursorLineNr", { "fg": s:yellow })
+      autocmd ColorScheme * call onedark#set_highlight("rubyConstant", { "fg": s:dark_yellow })
+      autocmd ColorScheme * call onedark#set_highlight("rubySymbolDelimiter", { "fg": s:red })
+      autocmd ColorScheme * call onedark#set_highlight("rubySymbol", { "fg": s:yellow })
+      autocmd ColorScheme * call onedark#set_highlight("rubyKeywordAsMethod", { "fg": s:blue })
+      autocmd ColorScheme * call onedark#set_highlight("rubyPseudoVariable", { "fg": s:red })
+      autocmd ColorScheme * call onedark#set_highlight("rubyBoolean", { "fg": s:red })
+      autocmd ColorScheme * call onedark#set_highlight("rubyInteger", { "fg": s:red })
+    augroup END
+  endif
+
   let g:onedark_terminal_italics = 1
-  let g:onedark_termcolors = 256
+  let g:onedark_color_overrides = {
+    \ "black": {"gui": "#181a1b", "cterm": "235", "cterm16": "0" },
+    \ "green": { "gui": "#C3E88D", "cterm": "114", "cterm16": "2" },
+    \ "yellow": { "gui": "#FFE082", "cterm": "180", "cterm16": "3" },
+    \ "dark_yellow": { "gui": "#FFCB6B", "cterm": "173", "cterm16": "11" },
+    \ "blue": { "gui": "#82AAFF", "cterm": "39", "cterm16": "4" },
+    \ "purple": { "gui": "#C792EA", "cterm": "170", "cterm16": "5" },
+    \ "cyan": { "gui": "#89DDF3", "cterm": "38", "cterm16": "6" },
+    \ "white": { "gui": "#FCFCFC", "cterm": "145", "cterm16": "7" },
+    \}
 
   syntax on
   colorscheme onedark
