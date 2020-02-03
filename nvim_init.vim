@@ -18,7 +18,9 @@
     Plug 'jiangmiao/auto-pairs'
     Plug 'junegunn/vim-easy-align'
     Plug 'AndrewRadev/splitjoin.vim'
+
     Plug 'ludovicchabant/vim-gutentags'
+    Plug 'skywind3000/gutentags_plus'
 
     Plug 'scrooloose/nerdtree'
     Plug 'ryanoasis/vim-devicons'
@@ -275,13 +277,97 @@
 " }}}
 
 " Plugin Settings {{{
+  " AIRLINE{{{
+    let g:airline#extensions#coc#enabled          = 1
+    let g:airline#extensions#ale#enabled          = 1
+    let g:airline#extensions#tabline#enabled      = 1
+    let g:airline#extensions#bufferline#enabled   = 1
+    let g:airline#extensions#gutentags#enabled    = 1
+    let g:airline_theme                           = 'deus'
+    let g:airline_powerline_fonts                 = 1
+    let g:airline_left_sep                        = '█'
+    let g:airline_right_sep                       = '█'
+    let g:airline_left_alt_sep                    = '|'
+    let g:airline#extensions#tabline#left_sep     = '█'
+    let g:airline#extensions#tabline#right_sep    = '█'
+    let g:airline#extensions#tabline#left_alt_sep = '|'
+  "}}}
+  " ALE{{{
+    let g:ale_linters = {
+    \   'javascript': ['eslint'],
+    \   'ruby': ['rubocop'],
+    \}
+
+    let g:ale_fixers = {
+            \'*': ['remove_trailing_lines', 'trim_whitespace'],
+            \'javascript': ['prettier'],
+            \'css' : ['prettier'],
+            \'html' : ['prettier'],
+            \'markdown' : ['prettier'],
+            \'yaml': ['prettier'],
+            \'json': ['prettier'],
+            \'ruby': ['rubocop'],
+            \}
+
+    let g:ale_fix_on_save = 1
+    let g:ale_linters_explicit = 1
+    let g:ale_sign_column_always = 1
+    let g:ale_sign_error = '>>'
+    let g:ale_sign_warning = '!'
+
+    " Lint always in Normal Mode
+    let g:ale_lint_on_text_changed = 'normal'
+
+    " Lint when leaving Insert Mode but don't lint when in Insert Mode
+    let g:ale_lint_on_insert_leave = 1
+
+    " Set ALE's 200ms delay to zero
+    let g:ale_lint_delay = 0
+    "}}}
 " AUTOPAIRS {{{
   au FileType erb let b:AutoPairs = AutoPairsDefine({'<%' : '%>', '<%=' : '%>'})
   " let g:AutoPairsMapCR = 0
   " let g:AutoPairsMapBS = 0
 " }}}
-  " TEST {{{
-    let test#strategy = "neovim"
+  " COC{{{
+    let g:coc_global_extensions = ['coc-solargraph']
+
+    function! s:check_back_space() abort
+      let col = col('.') - 1
+      return !col || getline('.')[col - 1]  =~# '\s'
+    endfunction
+
+    " Close window when done
+    autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif
+
+    " Highlight symbol under cursor on CursorHold
+    autocmd CursorHold * silent call CocActionAsync('highlight')
+
+    augroup mygroup
+      autocmd!
+      " Setup formatexpr specified filetype(s).
+      autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+      " Update signature help on jump placeholder
+      autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+    augroup end
+
+    " Use `:Format` to format current buffer
+    command! -nargs=0 Format :call CocAction('format')
+
+    " Use `:Fold` to fold current buffer
+    command! -nargs=? Fold :call     CocAction('fold', <f-args>)
+
+    " use `:OR` for organize import of current buffer
+    command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')"
+  " }}}
+  " EASYALIGN{{{
+    let g:easy_align_delimiters = {
+            \ '?': {'pattern': '?'},
+            \ '>': {'pattern': '>>\|=>\|>'}
+            \ }
+  "}}}
+  " ENDWISE {{{
+    let g:endwise_no_mappings=1
   " }}}
   " FZF{{{
     let $FZF_DEFAULT_COMMAND = 'rg --files --no-ignore-vcs --hidden -g "!{node_modules,.git}"'
@@ -368,21 +454,73 @@
 
     endfunction
   "}}}
-  " AIRLINE{{{
-    let g:airline#extensions#coc#enabled          = 1
-    let g:airline#extensions#ale#enabled          = 1
-    let g:airline#extensions#tabline#enabled      = 1
-    let g:airline#extensions#bufferline#enabled   = 1
-    let g:airline#extensions#gutentags#enabled    = 1
-    let g:airline_theme                           = 'deus'
-    let g:airline_powerline_fonts                 = 1
-    let g:airline_left_sep                        = '█'
-    let g:airline_right_sep                       = '█'
-    let g:airline_left_alt_sep                    = '|'
-    let g:airline#extensions#tabline#left_sep     = '█'
-    let g:airline#extensions#tabline#right_sep    = '█'
-    let g:airline#extensions#tabline#left_alt_sep = '|'
-  "}}}
+  " GUTENTAGS {{{
+    " enable gtags module
+    let g:gutentags_modules = ['ctags', 'gtags_cscope']
+
+    " config project root markers.
+    let g:gutentags_project_root = ['.root', '.git']
+
+    " generate datebases in my cache directory, prevent gtags files polluting my project
+    let g:gutentags_cache_dir = expand('~/.cache/tags')
+
+    " change focus to quickfix window after search (optional).
+    let g:gutentags_plus_switch = 1
+
+    let g:gutentags_generate_on_new = 1
+    let g:gutentags_generate_on_missing = 1
+    let g:gutentags_generate_on_write = 1
+    let g:gutentags_generate_on_empty_buffer = 0
+
+    let g:gutentags_ctags_exclude = [
+      \ '*.git', '*.svg', '*.hg',
+      \ '*/tests/*',
+      \ 'build',
+      \ 'dist',
+      \ '*sites/*/files/*',
+      \ 'bin',
+      \ 'node_modules',
+      \ 'bower_components',
+      \ 'cache',
+      \ 'compiled',
+      \ 'docs',
+      \ 'example',
+      \ 'bundle',
+      \ 'vendor',
+      \ '*.md',
+      \ '*-lock.json',
+      \ '*.lock',
+      \ '*bundle*.js',
+      \ '*build*.js',
+      \ '.*rc*',
+      \ '*.json',
+      \ '*.min.*',
+      \ '*.map',
+      \ '*.bak',
+      \ '*.zip',
+      \ '*.pyc',
+      \ '*.class',
+      \ '*.sln',
+      \ '*.Master',
+      \ '*.csproj',
+      \ '*.tmp',
+      \ '*.csproj.user',
+      \ '*.cache',
+      \ '*.pdb',
+      \ 'tags*',
+      \ 'cscope.*',
+      \ '*.css',
+      \ '*.less',
+      \ '*.scss',
+      \ '*.exe', '*.dll',
+      \ '*.mp3', '*.ogg', '*.flac',
+      \ '*.swp', '*.swo',
+      \ '*.bmp', '*.gif', '*.ico', '*.jpg', '*.png',
+      \ '*.rar', '*.zip', '*.tar', '*.tar.gz', '*.tar.xz', '*.tar.bz2',
+      \ '*.pdf', '*.doc', '*.docx', '*.ppt', '*.pptx',
+      \ ]
+
+  " }}}
   " NERDTREE{{{
     let g:NERDTreeWinSize=60
     let NERDTreeShowHidden=1
@@ -403,54 +541,22 @@
     if exists('g:loaded_webdevicons')
       call webdevicons#refresh()
     endif
+
     let g:NERDTreeQuitOnOpen = 1
     let g:NERDTreeShowIgnoredStatus = 0
     let g:NERDTreeIndicatorMapCustom = {
-        \ "Modified"  : "!",
-        \ "Staged"    : "+",
-        \ "Untracked" : "?",
-        \ "Renamed"   : "»",
-        \ "Unmerged"  : "=",
-        \ "Deleted"   : "x",
-        \ "Dirty"     : "#",
-        \ "Clean"     : "✔︎",
-        \ "Ignored"   : "~",
-        \ "Unknown"   : "*"
+        \ 'Modified'  : '!',
+        \ 'Staged'    : '+',
+        \ 'Untracked' : '?',
+        \ 'Renamed'   : '»',
+        \ 'Unmerged'  : '=',
+        \ 'Deleted'   : 'x',
+        \ 'Dirty'     : '#',
+        \ 'Clean'     : '✔︎',
+        \ 'Ignored'   : '~',
+        \ 'Unknown'   : '*'
         \ }
-  "}}}
-  " ALE{{{
-    let g:ale_linters = {
-    \   'javascript': ['eslint'],
-    \   'ruby': ['rubocop'],
-    \}
-
-    let g:ale_fixers = {
-            \'*': ['remove_trailing_lines', 'trim_whitespace'],
-            \'javascript': ['prettier'],
-            \'css' : ['prettier'],
-            \'html' : ['prettier'],
-            \'markdown' : ['prettier'],
-            \'yaml': ['prettier'],
-            \'json': ['prettier'],
-            \'ruby': ['rubocop'],
-            \}
-
-    let g:ale_fix_on_save = 1
-    let g:ale_linters_explicit = 1
-    let g:ale_sign_column_always = 1
-    " let g:ale_set_highlights = 0
-    let g:ale_sign_error = '>>'
-    let g:ale_sign_warning = '!'
-
-    " Lint always in Normal Mode
-    let g:ale_lint_on_text_changed = 'normal'
-
-    " Lint when leaving Insert Mode but don't lint when in Insert Mode
-    let g:ale_lint_on_insert_leave = 1
-
-    " Set ALE's 200ms delay to zero
-    let g:ale_lint_delay = 0
-  "}}}
+  ""}}}
   " MATCHUP{{{
     augroup matchup_matchparen_highlight
       autocmd!
@@ -461,45 +567,8 @@
     let g:matchup_matchparen_deferred = 1
     let g:matchup_matchparen_offscreen = {}
   "}}}
-  " EASYALIGN{{{
-    let g:easy_align_delimiters = {
-            \ '?': {'pattern': '?'},
-            \ '>': {'pattern': '>>\|=>\|>'}
-            \ }
-  "}}}
-  " COC{{{
-    let g:coc_global_extensions = ['coc-solargraph']
-
-    function! s:check_back_space() abort
-      let col = col('.') - 1
-      return !col || getline('.')[col - 1]  =~# '\s'
-    endfunction
-
-    " Close window when done
-    autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif
-
-    " Highlight symbol under cursor on CursorHold
-    autocmd CursorHold * silent call CocActionAsync('highlight')
-
-    augroup mygroup
-      autocmd!
-      " Setup formatexpr specified filetype(s).
-      autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
-      " Update signature help on jump placeholder
-      autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-    augroup end
-
-    " Use `:Format` to format current buffer
-    command! -nargs=0 Format :call CocAction('format')
-
-    " Use `:Fold` to fold current buffer
-    command! -nargs=? Fold :call     CocAction('fold', <f-args>)
-
-    " use `:OR` for organize import of current buffer
-    command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')"
-  " }}}
-  " ENDWISE {{{
-    let g:endwise_no_mappings=1
+  " TEST {{{
+    let test#strategy = "neovim"
   " }}}
 " }}}
 
