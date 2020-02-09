@@ -3,7 +3,7 @@
   if empty(glob('~/.config/nvim/autoload/plug.vim'))
       silent !curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs
           \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-      autocmd VimEnter * PlugInstall --sync
+      autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
   endif
 
   call plug#begin()
@@ -28,7 +28,7 @@
     Plug 'flw-cn/vim-nerdtree-l-open-h-close'
     Plug 'vwxyutarooo/nerdtree-devicons-syntax'
 
-    Plug '/usr/local/opt/fzf'
+    Plug 'junegunn/fzf', { 'do': './install --bin' }
     Plug 'junegunn/fzf.vim'
 
     Plug 'vim-airline/vim-airline'
@@ -49,7 +49,7 @@
   set number                " Show line number
   set relativenumber        " Show Relative Line Numbers
   set noshowmode            " Status line makes this unneeded
-  set numberwidth=5
+  set numberwidth=5         " Make the line number column wider
   set backspace=indent,eol,start
   set tabstop=2
   set shiftwidth=2
@@ -60,15 +60,13 @@
   set ignorecase            " ignore case on search
   set smartcase             " Ignores case if search is all lower, case sensitive otherwise
   set hlsearch              " Highlight Search
-  set re=1                  " Sets regex engine
+  " set re=1                  " Sets regex engine
   set scrolloff=4           " Keep 4 lines below cursonr
   set visualbell            " don't beep
   set noerrorbells          " don't beep
   set belloff=all           " don't flash
-  set pastetoggle=<F2>
+  set pastetoggle=<F2>      " turn on paste mode with F2
   set noswapfile
-  " set textwidth=80
-  " set colorcolumn=+1
   set splitbelow            " split below, not above
   set splitright            " split right, not left
   set foldmethod=marker     " Fold code between {{{ and }}}
@@ -104,8 +102,6 @@
     endif
   endif
 
-  autocmd FileType ruby setlocal expandtab shiftwidth=2 tabstop=2
-
   " Autoreload changed files
   set autoread
   au CursorHold,CursorHoldI * checktime
@@ -121,12 +117,7 @@
 " }}}
 
 " Cursor Settings {{{
-  " iTerm
-  let &t_SI = "\<Esc>]50;CursorShape=1\x7"
-  let &t_SR = "\<Esc>]50;CursorShape=2\x7"
-  let &t_EI = "\<Esc>]50;CursorShape=0\x7"
-
-  " Kitty
+  " UNDERSCORE for replace, BOX for normal, PIPE for insert
   let &t_SI = "\<Esc>[6 q"
   let &t_SR = "\<Esc>[4 q"
   let &t_EI = "\<Esc>[2 q"
@@ -142,6 +133,9 @@
   " normal mode command to write file should work in insert mode because
   " I forget to hit escape
   inoremap ;w<cr> <esc>:w<cr>
+
+  " save file when leaving insert mode
+  inoremap <esc> <esc>:w<cr>
 
   " More sane vertical navigation
   nmap k gk
@@ -159,7 +153,7 @@
   nnoremap C "_C
   nnoremap cc "_cc
 
-  " Remove Arrow Keys in Normal Mode
+  " Remove Arrow Keys in Normal & Insert Mode
   noremap  <Up>    <Nop>
   noremap  <Down>  <Nop>
   noremap  <Left>  <Nop>
@@ -196,7 +190,7 @@
 
   " Enter inserts newline without leaving Normal mode
   nmap <S-Enter> O<Esc>
-  nmap <CR> o<Esc>
+  nmap <CR>      o<Esc>
 
   " jump list (previous, next)
 	nnoremap <C-p> <C-i>
@@ -233,18 +227,17 @@
   nnoremap [r :ALEPreviousWrap<CR>
   nnoremap <c-t> :Tags<cr>
   nnoremap <c-g> :RG<cr>
-  nnoremap <silent><c-f> :call Fzf_dev()<CR>
+  nnoremap <silent><leader>ff :call Fzf_dev()<CR>
+  nnoremap <silent><c-f> :Files<CR>
   nnoremap <c-b> :Buffers<cr>
   xmap ga <Plug>(EasyAlign)
   nmap ga <Plug>(EasyAlign)
-  nnoremap <silent> <Leader>t  :TestFile<CR>
-  nnoremap <silent> <Leader>a  :TestSuite<CR>
   nmap <Leader>, gcc
   nmap sj :SplitjoinSplit<cr>
   nmap sk :SplitjoinJoin<cr>
 
-  " Remaps enter to select item in Pop up menu
-  inoremap <expr> <CR> pumvisible() ? "\<C-Y>" : "\<CR>"
+  " Remaps control-y to select item in Pop up menu
+  inoremap <expr> <c-y> pumvisible() ? "\<C-Y>" : "\<CR>"
 
   " COC - Remap keys for gotos
   nmap <silent> gd <Plug>(coc-definition)
@@ -252,13 +245,13 @@
   nmap <silent> gi <Plug>(coc-implementation)
   nmap <silent> gr <Plug>(coc-references)
   " COC - Remap for rename current word
-  nmap <leader>rn <Plug>(coc-rename)
+  nmap <leader>rn  <Plug>(coc-rename)
   " COC - Remap for format selected region
-  xmap <leader>f  <Plug>(coc-format-selected)
-  nmap <leader>f  <Plug>(coc-format-selected)
+  xmap <leader>f   <Plug>(coc-format-selected)
+  nmap <leader>f   <Plug>(coc-format-selected)
   " COC - Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
-  xmap <leader>a  <Plug>(coc-codeaction-selected)
-  nmap <leader>a  <Plug>(coc-codeaction-selected)
+  xmap <leader>a   <Plug>(coc-codeaction-selected)
+  nmap <leader>a   <Plug>(coc-codeaction-selected)
   " COC - Remap for do codeAction of current line
   nmap <leader>ac  <Plug>(coc-codeaction)
   " COC - Fix autofix problem of current line
@@ -287,10 +280,10 @@
     let g:airline_powerline_fonts                 = 1
     let g:airline_left_sep                        = '█'
     let g:airline_right_sep                       = '█'
-    let g:airline_left_alt_sep                    = '|'
+    let g:airline_left_alt_sep                    = ' '
     let g:airline#extensions#tabline#left_sep     = '█'
     let g:airline#extensions#tabline#right_sep    = '█'
-    let g:airline#extensions#tabline#left_alt_sep = '|'
+    let g:airline#extensions#tabline#left_alt_sep = ' '
   "}}}
   " ALE{{{
     let g:ale_linters = {
@@ -299,21 +292,21 @@
     \}
 
     let g:ale_fixers = {
-            \'*': ['remove_trailing_lines', 'trim_whitespace'],
-            \'javascript': ['prettier'],
-            \'css' : ['prettier'],
-            \'html' : ['prettier'],
-            \'markdown' : ['prettier'],
-            \'yaml': ['prettier'],
-            \'json': ['prettier'],
-            \'ruby': ['rubocop'],
-            \}
+    \   '*': ['remove_trailing_lines', 'trim_whitespace'],
+    \   'javascript': ['prettier'],
+    \   'css' : ['prettier'],
+    \   'html' : ['prettier'],
+    \   'markdown' : ['prettier'],
+    \   'yaml': ['prettier'],
+    \   'json': ['prettier'],
+    \   'ruby': ['rubocop'],
+    \}
 
-    let g:ale_fix_on_save = 1
-    let g:ale_linters_explicit = 1
+    let g:ale_fix_on_save        = 1
+    let g:ale_linters_explicit   = 1
     let g:ale_sign_column_always = 1
-    let g:ale_sign_error = '>>'
-    let g:ale_sign_warning = '!'
+    let g:ale_sign_error         = '>>'
+    let g:ale_sign_warning       = '!'
 
     " Lint always in Normal Mode
     let g:ale_lint_on_text_changed = 'normal'
@@ -325,7 +318,6 @@
     let g:ale_lint_delay = 0
     "}}}
 " AUTOPAIRS {{{
-  au FileType erb let b:AutoPairs = AutoPairsDefine({'<%' : '%>', '<%=' : '%>'})
   " let g:AutoPairsMapCR = 0
   " let g:AutoPairsMapBS = 0
 " }}}
@@ -353,12 +345,6 @@
 
     " Use `:Format` to format current buffer
     command! -nargs=0 Format :call CocAction('format')
-
-    " Use `:Fold` to fold current buffer
-    command! -nargs=? Fold :call     CocAction('fold', <f-args>)
-
-    " use `:OR` for organize import of current buffer
-    command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')"
   " }}}
   " EASYALIGN{{{
     let g:easy_align_delimiters = {
@@ -366,12 +352,10 @@
             \ '>': {'pattern': '>>\|=>\|>'}
             \ }
   "}}}
-  " ENDWISE {{{
-    let g:endwise_no_mappings=1
-  " }}}
   " FZF{{{
     let $FZF_DEFAULT_COMMAND = 'rg --files --no-ignore-vcs --hidden -g "!{node_modules,.git}"'
-    let $FZF_DEFAULT_OPTS=' --color=dark --color=fg:15,bg:-1,hl:1,fg+:#ffffff,bg+:0,hl+:1 --color=info:0,prompt:0,pointer:12,marker:4,spinner:11,header:-1 --layout=reverse  --margin=1,4'
+    let $FZF_DEFAULT_OPTS    = ' --color=dark --color=fg:15,bg:-1,hl:1,fg+:#ffffff,bg+:0,hl+:1 --color=info:0,prompt:0,pointer:12,marker:4,spinner:11,header:-1 --layout=reverse  --margin=1,4'
+
     let g:fzf_layout = { 'window': 'call FloatingFZF()' }
     let g:fzf_action = {
           \ 'ctrl-s': 'split',
@@ -394,28 +378,28 @@
 
 
     function! RipgrepFzf(query, fullscreen)
-      let command_fmt = 'rg --column --line-number --no-heading --color=always --smart-case %s || true'
+      let command_fmt     = 'rg --column --line-number --no-heading --color=always --smart-case %s || true'
       let initial_command = printf(command_fmt, shellescape(a:query))
-      let reload_command = printf(command_fmt, '{q}')
-      let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
+      let reload_command  = printf(command_fmt, '{q}')
+      let spec            = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
       call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
     endfunction
     command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
 
     function! FloatingFZF()
-      let buf = nvim_create_buf(v:false, v:true)
+      let buf        = nvim_create_buf(v:false, v:true)
       call setbufvar(buf, '&signcolumn', 'no')
-      let height = float2nr(25)
-      let width = float2nr(&columns * 0.9)
+      let height     = float2nr(25)
+      let width      = float2nr(&columns * 0.9)
       let horizontal = float2nr((&columns - width) / 2)
-      let vertical = 3
-      let opts = {
+      let vertical   = 3
+      let opts       = {
             \ 'relative': 'editor',
-            \ 'row': vertical,
-            \ 'col': horizontal,
-            \ 'width': width,
-            \ 'height': height,
-            \ 'style': 'minimal'
+            \ 'row':      vertical,
+            \ 'col':      horizontal,
+            \ 'width':    width,
+            \ 'height':   height,
+            \ 'style':    'minimal'
             \ }
       call nvim_open_win(buf, v:true, opts)
     endfunction
@@ -461,15 +445,15 @@
     " config project root markers.
     let g:gutentags_project_root = ['.root', '.git']
 
-    " generate datebases in my cache directory, prevent gtags files polluting my project
+    " generate datebases in cache directory, prevent gtags files polluting my project
     let g:gutentags_cache_dir = expand('~/.cache/tags')
 
     " change focus to quickfix window after search (optional).
-    let g:gutentags_plus_switch = 1
+    let g:gutentags_plus_switch              = 1
 
-    let g:gutentags_generate_on_new = 1
-    let g:gutentags_generate_on_missing = 1
-    let g:gutentags_generate_on_write = 1
+    let g:gutentags_generate_on_new          = 1
+    let g:gutentags_generate_on_missing      = 1
+    let g:gutentags_generate_on_write        = 1
     let g:gutentags_generate_on_empty_buffer = 0
 
     let g:gutentags_ctags_exclude = [
@@ -525,16 +509,17 @@
     let g:NERDTreeWinSize=60
     let NERDTreeShowHidden=1
     let NERDTreeMinimalUI = 1
+    " Quit if the last buffer is nerdTree
     autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
   "}}}
   " NERDTree Dev Icons{{{
-    let g:WebDevIconsNerdTreeAfterGlyphPadding = "\u00A0\u00A0"
-    let g:webdevicons_conceal_nerdtree_brackets = 1
+    let g:WebDevIconsNerdTreeAfterGlyphPadding    = "\u00A0\u00A0"
+    let g:webdevicons_conceal_nerdtree_brackets   = 1
     let g:WebDevIconsNerdTreeGitPluginForceVAlign = 1
-    let g:WebDevIconsUnicodeDecorateFolderNodes = 1
-    let g:WebDevIconsOS = 'Darwin'
-    let g:webdevicons_enable_airline_tabline = 1
-    let g:webdevicons_enable_airline_statusline = 1
+    let g:WebDevIconsUnicodeDecorateFolderNodes   = 1
+    let g:WebDevIconsOS                           = 'Darwin'
+    let g:webdevicons_enable_airline_tabline      = 1
+    let g:webdevicons_enable_airline_statusline   = 1
   "}}}
   " NERDTree Git Plugin{{{
     " Fix brackets on resourcing vimrc file
@@ -542,8 +527,8 @@
       call webdevicons#refresh()
     endif
 
-    let g:NERDTreeQuitOnOpen = 1
-    let g:NERDTreeShowIgnoredStatus = 0
+    let g:NERDTreeQuitOnOpen         = 1
+    let g:NERDTreeShowIgnoredStatus  = 0
     let g:NERDTreeIndicatorMapCustom = {
         \ 'Modified'  : '!',
         \ 'Staged'    : '+',
@@ -561,15 +546,12 @@
     augroup matchup_matchparen_highlight
       autocmd!
       autocmd ColorScheme * hi MatchParen guifg=#c678dd gui=bold
-      autocmd ColorScheme * hi MatchWord guifg=#FFCB6B gui=italic
+      autocmd ColorScheme * hi MatchWord  guifg=#FFCB6B gui=italic
     augroup END
-    let g:matchup_surround_enabled = 1
-    let g:matchup_matchparen_deferred = 1
+    let g:matchup_surround_enabled     = 1
+    let g:matchup_matchparen_deferred  = 1
     let g:matchup_matchparen_offscreen = {}
   "}}}
-  " TEST {{{
-    let test#strategy = "neovim"
-  " }}}
 " }}}
 
 " Language Settings {{{
@@ -583,36 +565,36 @@
   if (has("autocmd") && !has("gui_running"))
     augroup colorset
       autocmd!
-      let s:yellow      = { "gui": "#FFE082", "cterm": "180", "cterm16": "3" }
-      let s:purple      = { "gui": "#C792EA", "cterm": "170", "cterm16": "5" }
-      let s:blue        = { "gui": "#82AAFF", "cterm": "39", "cterm16": "4" }
-      let s:red         = { "gui": "#E06C75", "cterm": "204", "cterm16": "1" }
+      let s:yellow      = { "gui": "#FFE082", "cterm": "180", "cterm16": "3"  }
+      let s:purple      = { "gui": "#C792EA", "cterm": "170", "cterm16": "5"  }
+      let s:blue        = { "gui": "#82AAFF", "cterm": "39",  "cterm16": "4"  }
+      let s:red         = { "gui": "#E06C75", "cterm": "204", "cterm16": "1"  }
       let s:dark_yellow = { "gui": "#FFCB6B", "cterm": "173", "cterm16": "11" }
 
-      autocmd ColorScheme * call onedark#set_highlight("Constant", { "fg": s:yellow })
-      autocmd ColorScheme * call onedark#set_highlight("Statement", { "fg": s:blue })
-      autocmd ColorScheme * call onedark#set_highlight("Macro", { "fg": s:blue })
-      autocmd ColorScheme * call onedark#set_highlight("CursorLineNr", { "fg": s:yellow })
-      autocmd ColorScheme * call onedark#set_highlight("rubyConstant", { "fg": s:dark_yellow })
-      autocmd ColorScheme * call onedark#set_highlight("rubySymbolDelimiter", { "fg": s:red })
-      autocmd ColorScheme * call onedark#set_highlight("rubySymbol", { "fg": s:yellow })
-      autocmd ColorScheme * call onedark#set_highlight("rubyKeywordAsMethod", { "fg": s:blue })
-      autocmd ColorScheme * call onedark#set_highlight("rubyPseudoVariable", { "fg": s:red })
-      autocmd ColorScheme * call onedark#set_highlight("rubyBoolean", { "fg": s:red })
-      autocmd ColorScheme * call onedark#set_highlight("rubyInteger", { "fg": s:red })
+      autocmd ColorScheme * call onedark#set_highlight("Constant",            { "fg": s:yellow      })
+      autocmd ColorScheme * call onedark#set_highlight("Statement",           { "fg": s:blue        })
+      autocmd ColorScheme * call onedark#set_highlight("Macro",               { "fg": s:blue        })
+      autocmd ColorScheme * call onedark#set_highlight("CursorLineNr",        { "fg": s:yellow      })
+      autocmd ColorScheme * call onedark#set_highlight("rubyConstant",        { "fg": s:dark_yellow })
+      autocmd ColorScheme * call onedark#set_highlight("rubySymbolDelimiter", { "fg": s:red         })
+      autocmd ColorScheme * call onedark#set_highlight("rubySymbol",          { "fg": s:yellow      })
+      autocmd ColorScheme * call onedark#set_highlight("rubyKeywordAsMethod", { "fg": s:blue        })
+      autocmd ColorScheme * call onedark#set_highlight("rubyPseudoVariable",  { "fg": s:red         })
+      autocmd ColorScheme * call onedark#set_highlight("rubyBoolean",         { "fg": s:red         })
+      autocmd ColorScheme * call onedark#set_highlight("rubyInteger",         { "fg": s:red         })
     augroup END
   endif
 
   let g:onedark_terminal_italics = 1
-  let g:onedark_color_overrides = {
-    \ "black": {"gui": "#181a1b", "cterm": "235", "cterm16": "0" },
-    \ "green": { "gui": "#C3E88D", "cterm": "114", "cterm16": "2" },
-    \ "yellow": { "gui": "#FFE082", "cterm": "180", "cterm16": "3" },
+  let g:onedark_color_overrides  = {
+    \ "black":       { "gui": "#181a1b", "cterm": "235", "cterm16": "0"  },
+    \ "green":       { "gui": "#C3E88D", "cterm": "114", "cterm16": "2"  },
+    \ "yellow":      { "gui": "#FFE082", "cterm": "180", "cterm16": "3"  },
     \ "dark_yellow": { "gui": "#FFCB6B", "cterm": "173", "cterm16": "11" },
-    \ "blue": { "gui": "#82AAFF", "cterm": "39", "cterm16": "4" },
-    \ "purple": { "gui": "#C792EA", "cterm": "170", "cterm16": "5" },
-    \ "cyan": { "gui": "#89DDF3", "cterm": "38", "cterm16": "6" },
-    \ "white": { "gui": "#FCFCFC", "cterm": "145", "cterm16": "7" },
+    \ "blue":        { "gui": "#82AAFF", "cterm": "39",  "cterm16": "4"  },
+    \ "purple":      { "gui": "#C792EA", "cterm": "170", "cterm16": "5"  },
+    \ "cyan":        { "gui": "#89DDF3", "cterm": "38",  "cterm16": "6"  },
+    \ "white":       { "gui": "#FCFCFC", "cterm": "145", "cterm16": "7"  },
     \}
 
   syntax on
@@ -626,14 +608,12 @@
   highlight slimClass gui=italic guifg=#ffe082
   highlight slimId    gui=italic guifg=#82AAFF
   highlight slimAttr  gui=italic
-  let &t_ZH="\e[3m"
-  let &t_ZR="\e[23m"
 
   " Active and Inactive window bg color
-  hi ActiveWindow guibg=NONE
+  hi ActiveWindow   guibg=NONE
   hi InactiveWindow guibg=#2c323c
   set winhighlight=Normal:ActiveWindow,NormalNC:InactiveWindow
 
-  " Set Transparent Terminal Background
+  " Set Transparent Background
   hi Normal guibg=NONE
 " }}}
