@@ -36,6 +36,7 @@ alias fzfi='rg --files --hidden --follow --no-ignore-vcs -g "!{node_modules,.git
 alias vf='v $(fzfi)'
 
 alias chip="cd ~/Code/Principium/Chipmunk"
+alias nut="cd ~/Code/Principium/Nuthouse"
 alias killruby='pkill -f ruby'
 alias rc='bin/rails console'
 alias herokyu="heroku"
