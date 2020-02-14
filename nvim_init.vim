@@ -9,24 +9,31 @@
   call plug#begin()
     Plug 'joshdick/onedark.vim'
 
-    Plug 'chrisbra/Colorizer'
-    Plug 'dense-analysis/ale'
-    Plug 'neoclide/coc.nvim', { 'tag': '*', 'branch': 'release' }
     Plug 'sheerun/vim-polyglot'
     Plug 'andymass/vim-matchup'
     Plug 'airblade/vim-gitgutter'
     Plug 'jiangmiao/auto-pairs'
     Plug 'junegunn/vim-easy-align'
     Plug 'AndrewRadev/splitjoin.vim'
+    Plug 'Shougo/defx.nvim', { 'do': ':UpdateRemotePlugins' }
+    Plug 'kristijanhusak/defx-git'
+    Plug 'kristijanhusak/defx-icons'
+
+
+    Plug 'dense-analysis/ale'
+    Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+    Plug 'Shougo/neco-syntax'
+    Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
 
     Plug 'ludovicchabant/vim-gutentags'
     Plug 'skywind3000/gutentags_plus'
+    Plug 'majutsushi/tagbar'
 
-    Plug 'scrooloose/nerdtree'
-    Plug 'ryanoasis/vim-devicons'
-    Plug 'Xuyuanp/nerdtree-git-plugin'
-    Plug 'flw-cn/vim-nerdtree-l-open-h-close'
-    Plug 'vwxyutarooo/nerdtree-devicons-syntax'
+    " Plug 'scrooloose/nerdtree'
+    " Plug 'ryanoasis/vim-devicons'
+    " Plug 'Xuyuanp/nerdtree-git-plugin'
+    " Plug 'flw-cn/vim-nerdtree-l-open-h-close'
+    " Plug 'vwxyutarooo/nerdtree-devicons-syntax'
 
     Plug 'junegunn/fzf', { 'do': './install --bin' }
     Plug 'junegunn/fzf.vim'
@@ -60,7 +67,7 @@
   set ignorecase            " ignore case on search
   set smartcase             " Ignores case if search is all lower, case sensitive otherwise
   set hlsearch              " Highlight Search
-  " set re=1                  " Sets regex engine
+  set re=1                  " Sets regex engine
   set scrolloff=4           " Keep 4 lines below cursonr
   set visualbell            " don't beep
   set noerrorbells          " don't beep
@@ -126,9 +133,10 @@
 " Key Mappings {{{
   let mapleader = "\<Space>"
 
-  nmap <leader>vi :tabe $MYVIMRC<cr>
-  nmap <leader>so :source $MYVIMRC<cr>
-  nmap <leader>bp obinding.pry<esc>:w<cr>H
+  nnoremap <leader>vi :tabe $MYVIMRC<cr>
+  nnoremap <leader>so :source $MYVIMRC<cr>
+  nnoremap <leader>bp obinding.pry<esc>:w<cr>H
+  nnoremap <leader>fr :%s///gc<left><left><left><left>
 
   " normal mode command to write file should work in insert mode because
   " I forget to hit escape
@@ -222,9 +230,10 @@
   nnoremap <f10> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans <' . synIDattr(synID(line("."),col("."),0),"name") . "> lo <" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<cr>
 
   " Plugin Mappings
-  nmap - :NERDTreeToggle<CR>
-  nnoremap ]r :ALENextWrap<CR>
-  nnoremap [r :ALEPreviousWrap<CR>
+  nnoremap <leader>an :ALENextWrap<CR>
+  nnoremap <leader>ap :ALEPreviousWrap<CR>
+  nnoremap <leader>af :ALEFix<CR>
+
   nnoremap <c-t> :Tags<cr>
   nnoremap <c-g> :RG<cr>
   nnoremap <silent><leader>ff :call Fzf_dev()<CR>
@@ -235,38 +244,34 @@
   nmap <Leader>, gcc
   nmap sj :SplitjoinSplit<cr>
   nmap sk :SplitjoinJoin<cr>
+  noremap <leader>tb :TagbarToggle<CR>
+  nnoremap <silent> <leader>rn :call LanguageClient#textDocument_rename()<CR>
+  nnoremap <leader>cm :call LanguageClient_contextMenu()<CR>
 
-  " Remaps control-y to select item in Pop up menu
-  inoremap <expr> <c-y> pumvisible() ? "\<C-Y>" : "\<CR>"
+  " Remaps tab to select item in Pop up menu
+  inoremap <expr> <tab> pumvisible() ? "\<C-n>" : "\<tab>"
 
-  " COC - Remap keys for gotos
-  nmap <silent> gd <Plug>(coc-definition)
-  nmap <silent> gy <Plug>(coc-type-definition)
-  nmap <silent> gi <Plug>(coc-implementation)
-  nmap <silent> gr <Plug>(coc-references)
-  " COC - Remap for rename current word
-  nmap <leader>rn  <Plug>(coc-rename)
-  " COC - Remap for format selected region
-  xmap <leader>f   <Plug>(coc-format-selected)
-  nmap <leader>f   <Plug>(coc-format-selected)
-  " COC - Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
-  xmap <leader>a   <Plug>(coc-codeaction-selected)
-  nmap <leader>a   <Plug>(coc-codeaction-selected)
-  " COC - Remap for do codeAction of current line
-  nmap <leader>ac  <Plug>(coc-codeaction)
-  " COC - Fix autofix problem of current line
-  nmap <leader>qf  <Plug>(coc-fix-current)
-  " COC - <c-space> to trigger compleation
-  inoremap <silent><expr> <c-space> coc#refresh()
-  " COC - Press Tab or Shift-Tab and navigate around completion selections
-  inoremap <silent><expr> <Tab>
-    \ pumvisible() ? "\<C-n>" :
-    \ <SID>check_back_space() ? "\<Tab>" :
-    \ coc#refresh()
-  inoremap <silent><expr> <S-Tab>
-    \ pumvisible() ? "\<C-p>" :
-    \ <SID>check_back_space() ? "\<S-Tab>" :
-    \ coc#refresh()
+  call deoplete#custom#option('candidate_marks',
+        \ ['A', 'S', 'D', 'F', 'G'])
+  inoremap <expr>A       pumvisible() ?
+  \ deoplete#insert_candidate(0) : 'A'
+  inoremap <expr>S       pumvisible() ?
+  \ deoplete#insert_candidate(1) : 'S'
+  inoremap <expr>D       pumvisible() ?
+  \ deoplete#insert_candidate(2) : 'D'
+  inoremap <expr>F       pumvisible() ?
+  \ deoplete#insert_candidate(3) : 'F'
+  inoremap <expr>G       pumvisible() ?
+  \ deoplete#insert_candidate(4) : 'G'
+
+  " inoremap <silent><expr> <Tab>
+  "   \ pumvisible() ? "\<C-n>" :
+  "   \ <SID>check_back_space() ? "\<Tab>" :
+  "   \ coc#refresh()
+  " inoremap <silent><expr> <S-Tab>
+  "   \ pumvisible() ? "\<C-p>" :
+  "   \ <SID>check_back_space() ? "\<S-Tab>" :
+  "   \ coc#refresh()
 " }}}
 
 " Plugin Settings {{{
@@ -288,25 +293,26 @@
   " ALE{{{
     let g:ale_linters = {
     \   'javascript': ['eslint'],
-    \   'ruby': ['rubocop'],
+    \   'ruby':       ['rubocop', 'solargraph'],
     \}
 
     let g:ale_fixers = {
-    \   '*': ['remove_trailing_lines', 'trim_whitespace'],
+    \   '*':          ['remove_trailing_lines', 'trim_whitespace'],
+    \   'ruby':       ['rubocop'],
     \   'javascript': ['prettier'],
-    \   'css' : ['prettier'],
-    \   'html' : ['prettier'],
-    \   'markdown' : ['prettier'],
-    \   'yaml': ['prettier'],
-    \   'json': ['prettier'],
-    \   'ruby': ['rubocop'],
+    \   'css' :       ['prettier'],
+    \   'html' :      ['prettier'],
+    \   'markdown' :  ['prettier'],
+    \   'yaml':       ['prettier'],
+    \   'json':       ['prettier'],
     \}
 
     let g:ale_fix_on_save        = 1
+    let g:ale_fix_on_save_ignore = { 'ruby': ['rubocop'] }
     let g:ale_linters_explicit   = 1
     let g:ale_sign_column_always = 1
-    let g:ale_sign_error         = '>>'
-    let g:ale_sign_warning       = '!'
+    let g:ale_sign_error         = '!!'
+    let g:ale_sign_warning       = '>>'
 
     " Lint always in Normal Mode
     let g:ale_lint_on_text_changed = 'normal'
@@ -321,30 +327,96 @@
   " let g:AutoPairsMapCR = 0
   " let g:AutoPairsMapBS = 0
 " }}}
-  " COC{{{
-    let g:coc_global_extensions = ['coc-solargraph']
+  " DEFX Filetree browser {{{
+    nnoremap <silent>- :Defx<CR>
+    call defx#custom#option('_', {
+      \ 'columns': 'indent:icons:space:filename:type:git',
+      \ 'winwidth': 50,
+      \ 'split': 'vertical',
+      \ 'direction': 'topleft',
+      \ 'show_ignored_files': 1,
+      \ 'buffer_name': '',
+      \ 'resume': 1,
+      \ 'toggle': 1,
+      \})
 
-    function! s:check_back_space() abort
-      let col = col('.') - 1
-      return !col || getline('.')[col - 1]  =~# '\s'
+    let g:defx_git#indicators = {
+      \ 'Modified'  : '!',
+      \ 'Staged'    : '✚',
+      \ 'Untracked' : '?',
+      \ 'Renamed'   : '»',
+      \ 'Unmerged'  : '≠',
+      \ 'Ignored'   : 'ⁱ',
+      \ 'Deleted'   : '✖',
+      \ 'Unknown'   : '*'
+      \ }
+
+    let g:defx_icons_enable_syntax_highlight = 1
+    let g:defx_icons_directory_symlink_icon  = '~>'
+    let g:defx_icons_directory_icon          = ' +'
+    let g:defx_icons_root_opened_tree_icon   = ' -'
+    let g:defx_icons_nested_opened_tree_icon = ' -'
+    let g:defx_icons_nested_closed_tree_icon = ' +'
+    let g:defx_icons_column_length           = 2
+    call defx#custom#column('git', 'show_ignored', 1)
+
+    autocmd FileType defx call s:defx_init()
+    function! s:defx_init()
+      setl nonumber
+      setl norelativenumber
+      setl listchars=
+      setl nofoldenable
+      setl foldmethod=manual
+      setl cursorline
+      setl signcolumn=no
+
+      " Define Mappings
+      nnoremap <silent><buffer><expr> <CR>
+        \ defx#do_action('multi', ['drop', 'quit'])
+      nnoremap <silent><buffer><expr> .
+        \ defx#do_action('toggle_ignored_files')
+      nnoremap <silent><buffer><expr> c
+        \ defx#do_action('copy')
+      nnoremap <silent><buffer><expr> q
+        \ defx#do_action('quit')
+      nnoremap <silent><buffer><expr> m
+        \ defx#do_action('move')
+      nnoremap <silent><buffer><expr> P
+        \ defx#do_action('paste')
+      nnoremap <silent><buffer><expr> l
+        \ defx#do_action('open_tree')
+      nnoremap <silent><buffer><expr> h
+        \ defx#do_action('close_tree')
+      nnoremap <silent><buffer><expr> sv
+        \ defx#do_action('multi', [['drop', 'vsplit'], 'quit'])
+      nnoremap <silent><buffer><expr> sh
+        \ defx#do_action('multi', [['drop', 'split'], 'quit'])
+      nnoremap <silent><buffer><expr> st
+        \ defx#do_action('drop', 'tabedit')
+      nnoremap <silent><buffer><expr> N
+        \ defx#do_action('new_file')
+      nnoremap <silent><buffer><expr> d
+        \ defx#do_action('remove')
+      nnoremap <silent><buffer><expr> r
+        \ defx#do_action('rename')
+      nnoremap <silent><buffer><expr> <C-r>
+        \ defx#do_action('redraw')
+      nnoremap <silent><buffer><expr> > defx#do_action('resize',
+        \ defx#get_context().winwidth + 10)
+      nnoremap <silent><buffer><expr> < defx#do_action('resize',
+        \ defx#get_context().winwidth - 10)
     endfunction
-
-    " Close window when done
-    autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif
-
-    " Highlight symbol under cursor on CursorHold
-    autocmd CursorHold * silent call CocActionAsync('highlight')
-
-    augroup mygroup
-      autocmd!
-      " Setup formatexpr specified filetype(s).
-      autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
-      " Update signature help on jump placeholder
-      autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-    augroup end
-
-    " Use `:Format` to format current buffer
-    command! -nargs=0 Format :call CocAction('format')
+  " }}}
+  " DEOPLETE{{{
+    call deoplete#custom#option({
+      \ 'auto_complete_delay' :  50,
+      \ 'ignore_case'         :  1,
+      \ 'smart_case'          :  1,
+      \ 'camel_case'          :  1,
+      \ 'refresh_always'      :  1,
+      \ })
+    let g:deoplete#enable_at_startup = 1
+    call deoplete#custom#option('sources', { '_': ['ale', 'buffer', 'tag'] })
   " }}}
   " EASYALIGN{{{
     let g:easy_align_delimiters = {
@@ -505,43 +577,11 @@
       \ ]
 
   " }}}
-  " NERDTREE{{{
-    let g:NERDTreeWinSize=60
-    let NERDTreeShowHidden=1
-    let NERDTreeMinimalUI = 1
-    " Quit if the last buffer is nerdTree
-    autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
-  "}}}
-  " NERDTree Dev Icons{{{
-    let g:WebDevIconsNerdTreeAfterGlyphPadding    = "\u00A0\u00A0"
-    let g:webdevicons_conceal_nerdtree_brackets   = 1
-    let g:WebDevIconsNerdTreeGitPluginForceVAlign = 1
-    let g:WebDevIconsUnicodeDecorateFolderNodes   = 1
-    let g:WebDevIconsOS                           = 'Darwin'
-    let g:webdevicons_enable_airline_tabline      = 1
-    let g:webdevicons_enable_airline_statusline   = 1
-  "}}}
-  " NERDTree Git Plugin{{{
-    " Fix brackets on resourcing vimrc file
-    if exists('g:loaded_webdevicons')
-      call webdevicons#refresh()
-    endif
-
-    let g:NERDTreeQuitOnOpen         = 1
-    let g:NERDTreeShowIgnoredStatus  = 0
-    let g:NERDTreeIndicatorMapCustom = {
-        \ 'Modified'  : '!',
-        \ 'Staged'    : '+',
-        \ 'Untracked' : '?',
-        \ 'Renamed'   : '»',
-        \ 'Unmerged'  : '=',
-        \ 'Deleted'   : 'x',
-        \ 'Dirty'     : '#',
-        \ 'Clean'     : '✔︎',
-        \ 'Ignored'   : '~',
-        \ 'Unknown'   : '*'
+    " LSP Language Server Client {{{
+    let g:LanguageClient_serverCommands = {
+        \ 'ruby': ['~/.rbenv/shims/solargraph', 'stdio'],
         \ }
-  ""}}}
+    " }}}
   " MATCHUP{{{
     augroup matchup_matchparen_highlight
       autocmd!
