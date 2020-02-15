@@ -138,25 +138,20 @@
   nnoremap <leader>bp obinding.pry<esc>:w<cr>H
   nnoremap <leader>fr :%s///gc<left><left><left><left>
 
-  " normal mode command to write file should work in insert mode because
-  " I forget to hit escape
-  inoremap ;w<cr> <esc>:w<cr>
-
   " save file when leaving insert mode
   inoremap <esc> <esc>:w<cr>
 
-  " More sane vertical navigation
+  " More sane vertical navigation - respects columns
   nmap k gk
   nmap j gj
 
-  " rebinds semi-colon in normal mode. means you don't need to use shift!
+  " rebinds semi-colon in normal mode.
   nnoremap ; :
 
   " Bind `q` to close the buffer for help files
   autocmd Filetype help nnoremap <buffer> q :q<CR>
 
   " Change text without putting the text into register,
-  " see http://tinyurl.com/y2ap4h69
   nnoremap c "_c
   nnoremap C "_C
   nnoremap cc "_cc
@@ -192,13 +187,12 @@
   inoremap <C-h> <Left>
   inoremap <C-l> <Right>
 
-  " close pane using <C-w> since I know it from Chrome / Atom (cmd+w) and do
-  " not use the <C-w> mappings anyway
+  " Close pane using c-w
   noremap  <C-w> :bd<Cr>
 
   " Enter inserts newline without leaving Normal mode
-  nmap <S-Enter> O<Esc>
-  nmap <CR>      o<Esc>
+  nmap <s-cr> O<Esc>
+  nmap <cr>   o<Esc>
 
   " jump list (previous, next)
 	nnoremap <C-p> <C-i>
@@ -224,57 +218,13 @@
   vnoremap ˚ :m '<-2<CR>gv=gv
 
   " Clears Search
-  nmap <silent> ,/ :nohlsearch<CR>
+  nnoremap <silent> ,/ :nohlsearch<CR>
 
   " Output the current syntax group
   nnoremap <f10> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans <' . synIDattr(synID(line("."),col("."),0),"name") . "> lo <" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<cr>
-
-  " Plugin Mappings
-  nnoremap <leader>an :ALENextWrap<CR>
-  nnoremap <leader>ap :ALEPreviousWrap<CR>
-  nnoremap <leader>af :ALEFix<CR>
-
-  nnoremap <c-t> :Tags<cr>
-  nnoremap <c-g> :RG<cr>
-  nnoremap <silent><leader>ff :call Fzf_dev()<CR>
-  nnoremap <silent><c-f> :Files<CR>
-  nnoremap <c-b> :Buffers<cr>
-  xmap ga <Plug>(EasyAlign)
-  nmap ga <Plug>(EasyAlign)
-  nmap <Leader>, gcc
-  nmap sj :SplitjoinSplit<cr>
-  nmap sk :SplitjoinJoin<cr>
-  noremap <leader>tb :TagbarToggle<CR>
-  nnoremap <silent> <leader>rn :call LanguageClient#textDocument_rename()<CR>
-  nnoremap <leader>cm :call LanguageClient_contextMenu()<CR>
-
-  " Remaps tab to select item in Pop up menu
-  inoremap <expr> <tab> pumvisible() ? "\<C-n>" : "\<tab>"
-
-  call deoplete#custom#option('candidate_marks',
-        \ ['A', 'S', 'D', 'F', 'G'])
-  inoremap <expr>A       pumvisible() ?
-  \ deoplete#insert_candidate(0) : 'A'
-  inoremap <expr>S       pumvisible() ?
-  \ deoplete#insert_candidate(1) : 'S'
-  inoremap <expr>D       pumvisible() ?
-  \ deoplete#insert_candidate(2) : 'D'
-  inoremap <expr>F       pumvisible() ?
-  \ deoplete#insert_candidate(3) : 'F'
-  inoremap <expr>G       pumvisible() ?
-  \ deoplete#insert_candidate(4) : 'G'
-
-  " inoremap <silent><expr> <Tab>
-  "   \ pumvisible() ? "\<C-n>" :
-  "   \ <SID>check_back_space() ? "\<Tab>" :
-  "   \ coc#refresh()
-  " inoremap <silent><expr> <S-Tab>
-  "   \ pumvisible() ? "\<C-p>" :
-  "   \ <SID>check_back_space() ? "\<S-Tab>" :
-  "   \ coc#refresh()
 " }}}
 
-" Plugin Settings {{{
+" Plugin Settings & Mappings {{{
   " AIRLINE{{{
     let g:airline#extensions#coc#enabled          = 1
     let g:airline#extensions#ale#enabled          = 1
@@ -291,6 +241,10 @@
     let g:airline#extensions#tabline#left_alt_sep = ' '
   "}}}
   " ALE{{{
+    nnoremap <leader>an :ALENextWrap<CR>
+    nnoremap <leader>ap :ALEPreviousWrap<CR>
+    nnoremap <leader>af :ALEFix<CR>
+
     let g:ale_linters = {
     \   'javascript': ['eslint'],
     \   'ruby':       ['rubocop', 'solargraph'],
@@ -322,7 +276,7 @@
 
     " Set ALE's 200ms delay to zero
     let g:ale_lint_delay = 0
-    "}}}
+  "}}}
 " AUTOPAIRS {{{
   " let g:AutoPairsMapCR = 0
   " let g:AutoPairsMapBS = 0
@@ -367,7 +321,6 @@
       setl listchars=
       setl nofoldenable
       setl foldmethod=manual
-      setl cursorline
       setl signcolumn=no
 
       " Define Mappings
@@ -408,23 +361,64 @@
     endfunction
   " }}}
   " DEOPLETE{{{
+    " Remaps tab and shift-tab to select item in Pop up menu
+    inoremap <expr>  <tab> pumvisible() ? "\<C-n>" : "\<tab>"
+    inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+    "<TAB>: completion.
+    inoremap <silent><expr> <TAB>
+          \ pumvisible() ? "\<C-n>" :
+          \ <SID>check_back_space() ? "\<TAB>" :
+          \ deoplete#manual_complete()
+
+    function! s:check_back_space() abort
+      let col = col('.') - 1
+      return !col || getline('.')[col - 1]  =~ '\s'
+    endfunction
+
+    call deoplete#custom#option('candidate_marks',
+          \ ['A', 'S', 'D', 'F', 'G'])
+    inoremap <expr>A       pumvisible() ?
+    \ deoplete#insert_candidate(0) : 'A'
+    inoremap <expr>S       pumvisible() ?
+    \ deoplete#insert_candidate(1) : 'S'
+    inoremap <expr>D       pumvisible() ?
+    \ deoplete#insert_candidate(2) : 'D'
+    inoremap <expr>F       pumvisible() ?
+    \ deoplete#insert_candidate(3) : 'F'
+    inoremap <expr>G       pumvisible() ?
+    \ deoplete#insert_candidate(4) : 'G'
+
+    let g:deoplete#enable_at_startup = 1
+    call deoplete#custom#option('sources', {
+      \ '_': ['tag', 'buffer', 'flie', 'LanguageClient', 'syntax'],
+      \ 'ruby': ['tag', 'ale', 'buffer', 'file', 'syntax'],
+      \ })
+
     call deoplete#custom#option({
-      \ 'auto_complete_delay' :  50,
+      \ 'auto_complete_delay' :  0,
       \ 'ignore_case'         :  1,
       \ 'smart_case'          :  1,
       \ 'camel_case'          :  1,
       \ 'refresh_always'      :  1,
       \ })
-    let g:deoplete#enable_at_startup = 1
-    call deoplete#custom#option('sources', { '_': ['ale', 'buffer', 'tag'] })
   " }}}
   " EASYALIGN{{{
+    xnoremap ga <Plug>(EasyAlign)
+    nnoremap ga <Plug>(EasyAlign)
+
     let g:easy_align_delimiters = {
             \ '?': {'pattern': '?'},
             \ '>': {'pattern': '>>\|=>\|>'}
             \ }
   "}}}
   " FZF{{{
+    nnoremap <c-t> :Tags<cr>
+    nnoremap <c-g> :RG<cr>
+    nnoremap <silent><leader>ff :call Fzf_dev()<CR>
+    nnoremap <silent><c-f> :Files<CR>
+    nnoremap <c-b> :Buffers<cr>
+
     let $FZF_DEFAULT_COMMAND = 'rg --files --no-ignore-vcs --hidden -g "!{node_modules,.git}"'
     let $FZF_DEFAULT_OPTS    = ' --color=dark --color=fg:15,bg:-1,hl:1,fg+:#ffffff,bg+:0,hl+:1 --color=info:0,prompt:0,pointer:12,marker:4,spinner:11,header:-1 --layout=reverse  --margin=1,4'
 
@@ -510,7 +504,10 @@
 
     endfunction
   "}}}
-  " GUTENTAGS {{{
+  " GUTENTAGS & TAGBAR{{{
+    " Tagbar Plugin Binding
+    noremap <leader>tb :TagbarToggle<CR>
+
     " enable gtags module
     let g:gutentags_modules = ['ctags', 'gtags_cscope']
 
@@ -578,7 +575,9 @@
 
   " }}}
     " LSP Language Server Client {{{
-    let g:LanguageClient_serverCommands = {
+      nnoremap <silent> <leader>rn :call LanguageClient#textDocument_rename()<CR>
+      nnoremap <leader>cm :call LanguageClient_contextMenu()<CR>
+      let g:LanguageClient_serverCommands = {
         \ 'ruby': ['~/.rbenv/shims/solargraph', 'stdio'],
         \ }
     " }}}
@@ -592,6 +591,10 @@
     let g:matchup_matchparen_deferred  = 1
     let g:matchup_matchparen_offscreen = {}
   "}}}
+  " SPLITJOIN {{{
+    nnoremap sj :SplitjoinSplit<cr>
+    nnoremap sk :SplitjoinJoin<cr>
+  " }}}
 " }}}
 
 " Language Settings {{{
