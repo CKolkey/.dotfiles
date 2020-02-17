@@ -29,12 +29,6 @@
     Plug 'skywind3000/gutentags_plus'
     Plug 'majutsushi/tagbar'
 
-    " Plug 'scrooloose/nerdtree'
-    " Plug 'ryanoasis/vim-devicons'
-    " Plug 'Xuyuanp/nerdtree-git-plugin'
-    " Plug 'flw-cn/vim-nerdtree-l-open-h-close'
-    " Plug 'vwxyutarooo/nerdtree-devicons-syntax'
-
     Plug 'junegunn/fzf', { 'do': './install --bin' }
     Plug 'junegunn/fzf.vim'
 
@@ -292,7 +286,13 @@
       \ 'buffer_name': '',
       \ 'resume': 1,
       \ 'toggle': 1,
+      \ 'root_marker': ':',
       \})
+
+    call defx#custom#column('git', 'show_ignored', 1)
+    call defx#custom#column('filename', {
+      \ 'root_marker_highlight': 'Ignore',
+      \ })
 
     let g:defx_git#indicators = {
       \ 'Modified'  : '!',
@@ -312,9 +312,9 @@
     let g:defx_icons_nested_opened_tree_icon = ' -'
     let g:defx_icons_nested_closed_tree_icon = ' +'
     let g:defx_icons_column_length           = 2
-    call defx#custom#column('git', 'show_ignored', 1)
 
-    autocmd FileType defx call s:defx_init()
+    autocmd BufWritePost * call defx#redraw() " Redraw on file change
+    autocmd FileType defx call s:defx_init()  " Load Settings
     function! s:defx_init()
       setl nonumber
       setl norelativenumber
@@ -391,16 +391,12 @@
 
     let g:deoplete#enable_at_startup = 1
     call deoplete#custom#option('sources', {
-      \ '_': ['tag', 'buffer', 'flie', 'LanguageClient', 'syntax'],
-      \ 'ruby': ['tag', 'ale', 'buffer', 'file', 'syntax'],
+      \ '_': ['LanguageClient', 'around', 'buffer', 'file', 'syntax'],
       \ })
 
     call deoplete#custom#option({
-      \ 'auto_complete_delay' :  0,
-      \ 'ignore_case'         :  1,
-      \ 'smart_case'          :  1,
-      \ 'camel_case'          :  1,
-      \ 'refresh_always'      :  1,
+      \ 'num_processes' : -1,
+      \ 'max_list'      : 200,
       \ })
   " }}}
   " EASYALIGN{{{
