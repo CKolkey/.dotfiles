@@ -23,6 +23,7 @@ export EDITOR='nvim'
 export ZSH=$HOME/.oh-my-zsh
 export TERM=xterm-256color
 export UPDATE_ZSH_DAYS=1
+export BYOBU_PREFIX=/usr/local
 
 # Vi-Mode
 export KEYTIMEOUT=1
@@ -82,6 +83,9 @@ export HOMEBREW_AUTO_UPDATE_SECS=600000
 # Load rbenv if installed
 # export PATH="${HOME}/.rbenv/bin:${PATH}"
 type -a rbenv > /dev/null && eval "$(rbenv init -)"
+
+# link ruby to homebrews SSL lib
+export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
 
 export PATH="/usr/local/opt/python/libexec/bin:$PATH"
 export PATH="/usr/local/opt/sqlite/bin:$PATH"

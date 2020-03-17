@@ -9,16 +9,19 @@
   call plug#begin()
     Plug 'joshdick/onedark.vim'
 
+    Plug 'romainl/vim-cool'
+    Plug 'Krasjet/auto.pairs'
     Plug 'sheerun/vim-polyglot'
     Plug 'andymass/vim-matchup'
     Plug 'airblade/vim-gitgutter'
-    Plug 'jiangmiao/auto-pairs'
+    Plug 'chaoren/vim-wordmotion'
     Plug 'junegunn/vim-easy-align'
     Plug 'AndrewRadev/splitjoin.vim'
+    Plug 'machakann/vim-highlightedyank'
+
     Plug 'Shougo/defx.nvim', { 'do': ':UpdateRemotePlugins' }
     Plug 'kristijanhusak/defx-git'
     Plug 'kristijanhusak/defx-icons'
-
 
     Plug 'dense-analysis/ale'
     Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
@@ -58,11 +61,11 @@
   set shiftround            " Use multiple of shiftwidth when indenting with > and <
   set autoindent
   set incsearch             " Show matches While searching
+  set inccommand=split      " Show substitutions live
   set ignorecase            " ignore case on search
   set smartcase             " Ignores case if search is all lower, case sensitive otherwise
   set hlsearch              " Highlight Search
   set re=1                  " Sets regex engine
-  set scrolloff=4           " Keep 4 lines below cursonr
   set visualbell            " don't beep
   set noerrorbells          " don't beep
   set belloff=all           " don't flash
@@ -73,16 +76,16 @@
   set foldmethod=marker     " Fold code between {{{ and }}}
   set grepprg=rg\ --vimgrep " Use RipGrep for grepping
   set clipboard=unnamedplus " Use System Clipboard
-
+  set scrolloff=6          " Keep 10 lines above/below cursor
+  set winwidth=80
+  set winheight=10
   set list
-  set listchars=tab:›·,nbsp:•,trail:·,extends:»,precedes:«
-  autocmd filetype html,xml set listchars-=tab:>.
+  set listchars=tab:››,nbsp:·,trail:•,extends:»,precedes:«
+  autocmd filetype slim,html,xml set listchars-=tab:>.
 
-  " for coc.vim
   set hidden
   set nobackup
   set nowritebackup
-  set cmdheight=2    " Better cmd height; needed for coc
   set updatetime=300 " You will have bad experience for diagnostic messages when it's default 4000.
   set shortmess+=c   " don't give ins-completion-menu messages.
   set signcolumn=yes " always show signcolumns
@@ -107,7 +110,7 @@
   set autoread
   au CursorHold,CursorHoldI * checktime
   autocmd FileChangedShellPost *
-    \ echohl WarningMsg | echo "File changed on disk. Buffer reloaded." | echohl None
+    \ echohl WarningMsg | echo "File changed on disk - Buffer reloaded" | echohl None
 
   " Relative line numbers in Normal mode, absolute numbers in Insert mode
   augroup numbertoggle
@@ -129,18 +132,23 @@
 
   nnoremap <leader>vi :tabe $MYVIMRC<cr>
   nnoremap <leader>so :source $MYVIMRC<cr>
-  nnoremap <leader>bp obinding.pry<esc>:w<cr>H
+  nnoremap <leader>bp obinding.pry<esc>:w<cr>^
   nnoremap <leader>fr :%s///gc<left><left><left><left>
+  nnoremap <leader>j J
 
   " save file when leaving insert mode
   inoremap <esc> <esc>:w<cr>
 
   " More sane vertical navigation - respects columns
-  nmap k gk
-  nmap j gj
+  nnoremap k gk
+  nnoremap j gj
 
   " rebinds semi-colon in normal mode.
   nnoremap ; :
+
+  " Swich P and p
+  nnoremap P p
+  nnoremap p P
 
   " Bind `q` to close the buffer for help files
   autocmd Filetype help nnoremap <buffer> q :q<CR>
@@ -149,6 +157,9 @@
   nnoremap c "_c
   nnoremap C "_C
   nnoremap cc "_cc
+
+  " Don't yank whitespace at the beginning of a line
+  nnoremap Y ^y$
 
   " Remove Arrow Keys in Normal & Insert Mode
   noremap  <Up>    <Nop>
@@ -175,6 +186,11 @@
   noremap H     ^
   noremap L     $
 
+  " alt-; repeats a motion in the same direction (f, t, F, T)
+  " alt-" repeats motion in opposite direction
+  nnoremap … ,
+  nnoremap æ ;
+
   " easier one-off navigation in insert mode
   inoremap <C-k> <Up>
   inoremap <C-j> <Down>
@@ -188,8 +204,14 @@
   nmap <s-cr> O<Esc>
   nmap <cr>   o<Esc>
 
+  " Search results centered please
+  nnoremap <silent> n nzz
+  nnoremap <silent> N Nzz
+  nnoremap <silent> * *zz
+  nnoremap <silent> # #zz
+
   " jump list (previous, next)
-	nnoremap <C-p> <C-i>
+  nnoremap <C-p> <C-i>
 
   " use tab and shift tab to indent and de-indent code
   nnoremap <Tab>   >>
@@ -210,9 +232,6 @@
   inoremap ˚ <Esc>:m .-2<CR>==gi
   vnoremap ∆ :m '>+1<CR>gv=gv
   vnoremap ˚ :m '<-2<CR>gv=gv
-
-  " Clears Search
-  nnoremap <silent> ,/ :nohlsearch<CR>
 
   " Output the current syntax group
   nnoremap <f10> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans <' . synIDattr(synID(line("."),col("."),0),"name") . "> lo <" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<cr>
@@ -247,7 +266,7 @@
     let g:ale_fixers = {
     \   '*':          ['remove_trailing_lines', 'trim_whitespace'],
     \   'ruby':       ['rubocop'],
-    \   'javascript': ['prettier'],
+    \   'javascript': ['prettier', 'eslint'],
     \   'css' :       ['prettier'],
     \   'html' :      ['prettier'],
     \   'markdown' :  ['prettier'],
@@ -278,21 +297,19 @@
   " DEFX Filetree browser {{{
     nnoremap <silent>- :Defx<CR>
     call defx#custom#option('_', {
-      \ 'columns': 'indent:icons:space:filename:type:git',
+      \ 'columns': 'indent:icons:filename:type:git',
       \ 'winwidth': 50,
       \ 'split': 'vertical',
       \ 'direction': 'topleft',
       \ 'show_ignored_files': 1,
-      \ 'buffer_name': '',
+      \ 'buffer_name': 'defx',
       \ 'resume': 1,
       \ 'toggle': 1,
       \ 'root_marker': ':',
       \})
 
     call defx#custom#column('git', 'show_ignored', 1)
-    call defx#custom#column('filename', {
-      \ 'root_marker_highlight': 'Ignore',
-      \ })
+    call defx#custom#column('filename', { 'root_marker_highlight': 'Ignore' })
 
     let g:defx_git#indicators = {
       \ 'Modified'  : '!',
@@ -305,13 +322,26 @@
       \ 'Unknown'   : '*'
       \ }
 
-    let g:defx_icons_enable_syntax_highlight = 1
     let g:defx_icons_directory_symlink_icon  = '~>'
     let g:defx_icons_directory_icon          = ' +'
     let g:defx_icons_root_opened_tree_icon   = ' -'
     let g:defx_icons_nested_opened_tree_icon = ' -'
     let g:defx_icons_nested_closed_tree_icon = ' +'
+    let g:defx_icons_enable_syntax_highlight = 0
     let g:defx_icons_column_length           = 2
+    let g:defx_icons_enable_syntax_highlight = 1
+    let g:defx_icons_mark_icon               = '*'
+    let g:defx_icons_copy_icon               = ''
+    let g:defx_icons_move_icon               = ''
+    let g:defx_icons_parent_icon             = ''
+    let g:defx_icons_default_icon            = ''
+
+    augroup defx_colors
+      autocmd!
+      autocmd ColorScheme * highlight DefxIconsOpenedTreeIcon guifg=#FFCB6B
+      autocmd ColorScheme * highlight DefxIconsNestedTreeIcon guifg=#FFCB6B
+      autocmd ColorScheme * highlight DefxIconsClosedTreeIcon guifg=#FFCB6B
+    augroup END
 
     autocmd BufWritePost * call defx#redraw() " Redraw on file change
     autocmd FileType defx call s:defx_init()  " Load Settings
@@ -334,19 +364,19 @@
         \ defx#do_action('quit')
       nnoremap <silent><buffer><expr> m
         \ defx#do_action('move')
-      nnoremap <silent><buffer><expr> P
+      nnoremap <silent><buffer><expr> p
         \ defx#do_action('paste')
       nnoremap <silent><buffer><expr> l
         \ defx#do_action('open_tree')
       nnoremap <silent><buffer><expr> h
         \ defx#do_action('close_tree')
-      nnoremap <silent><buffer><expr> sv
+      nnoremap <silent><buffer><expr> v
         \ defx#do_action('multi', [['drop', 'vsplit'], 'quit'])
-      nnoremap <silent><buffer><expr> sh
+      nnoremap <silent><buffer><expr> s
         \ defx#do_action('multi', [['drop', 'split'], 'quit'])
-      nnoremap <silent><buffer><expr> st
+      nnoremap <silent><buffer><expr> t
         \ defx#do_action('drop', 'tabedit')
-      nnoremap <silent><buffer><expr> N
+      nnoremap <silent><buffer><expr> n
         \ defx#do_action('new_file')
       nnoremap <silent><buffer><expr> d
         \ defx#do_action('remove')
@@ -354,10 +384,10 @@
         \ defx#do_action('rename')
       nnoremap <silent><buffer><expr> <C-r>
         \ defx#do_action('redraw')
-      nnoremap <silent><buffer><expr> > defx#do_action('resize',
-        \ defx#get_context().winwidth + 10)
-      nnoremap <silent><buffer><expr> < defx#do_action('resize',
-        \ defx#get_context().winwidth - 10)
+      nnoremap <silent><buffer><expr> >
+        \ defx#do_action('resize', defx#get_context().winwidth + 10)
+      nnoremap <silent><buffer><expr> <
+        \ defx#do_action('resize', defx#get_context().winwidth - 10)
     endfunction
   " }}}
   " DEOPLETE{{{
@@ -376,19 +406,6 @@
       return !col || getline('.')[col - 1]  =~ '\s'
     endfunction
 
-    call deoplete#custom#option('candidate_marks',
-          \ ['A', 'S', 'D', 'F', 'G'])
-    inoremap <expr>A       pumvisible() ?
-    \ deoplete#insert_candidate(0) : 'A'
-    inoremap <expr>S       pumvisible() ?
-    \ deoplete#insert_candidate(1) : 'S'
-    inoremap <expr>D       pumvisible() ?
-    \ deoplete#insert_candidate(2) : 'D'
-    inoremap <expr>F       pumvisible() ?
-    \ deoplete#insert_candidate(3) : 'F'
-    inoremap <expr>G       pumvisible() ?
-    \ deoplete#insert_candidate(4) : 'G'
-
     let g:deoplete#enable_at_startup = 1
     call deoplete#custom#option('sources', {
       \ '_': ['LanguageClient', 'around', 'buffer', 'file', 'syntax'],
@@ -400,13 +417,8 @@
       \ })
   " }}}
   " EASYALIGN{{{
-    xnoremap ga <Plug>(EasyAlign)
-    nnoremap ga <Plug>(EasyAlign)
-
-    let g:easy_align_delimiters = {
-            \ '?': {'pattern': '?'},
-            \ '>': {'pattern': '>>\|=>\|>'}
-            \ }
+    xnoremap <leader>ea <Plug>(EasyAlign)
+    nnoremap <leader>ea <Plug>(EasyAlign)
   "}}}
   " FZF{{{
     nnoremap <c-t> :Tags<cr>
@@ -590,6 +602,14 @@
   " SPLITJOIN {{{
     nnoremap sj :SplitjoinSplit<cr>
     nnoremap sk :SplitjoinJoin<cr>
+  " }}}
+  " QUICKSCOPE {{{
+    let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
+    augroup qs_colors
+      autocmd!
+      autocmd ColorScheme * highlight QuickScopePrimary gui=bold guifg=#5ad5f1
+      autocmd ColorScheme * highlight QuickScopeSecondary gui=bold guifg=#5ad5f1
+    augroup END
   " }}}
 " }}}
 
