@@ -239,9 +239,9 @@
 
 " Plugin Settings & Mappings {{{
   " AIRLINE{{{
-    let g:airline#extensions#coc#enabled          = 1
     let g:airline#extensions#ale#enabled          = 1
     let g:airline#extensions#tabline#enabled      = 1
+    let g:airline#extensions#tabline#formatter    = 'unique_tail_improved'
     let g:airline#extensions#bufferline#enabled   = 1
     let g:airline#extensions#gutentags#enabled    = 1
     let g:airline_theme                           = 'deus'
@@ -290,10 +290,6 @@
     " Set ALE's 200ms delay to zero
     let g:ale_lint_delay = 0
   "}}}
-" AUTOPAIRS {{{
-  " let g:AutoPairsMapCR = 0
-  " let g:AutoPairsMapBS = 0
-" }}}
   " DEFX Filetree browser {{{
     nnoremap <silent>- :Defx<CR>
     call defx#custom#option('_', {
@@ -423,7 +419,6 @@
   " FZF{{{
     nnoremap <c-t> :Tags<cr>
     nnoremap <c-g> :RG<cr>
-    nnoremap <silent><leader>ff :call Fzf_dev()<CR>
     nnoremap <silent><c-f> :Files<CR>
     nnoremap <c-b> :Buffers<cr>
 
@@ -477,41 +472,14 @@
             \ }
       call nvim_open_win(buf, v:true, opts)
     endfunction
-
-    " Files + devicons + floating fzf
-    function! Fzf_dev()
-      let l:fzf_files_options = '--preview "bat --theme="TwoDark" --style=numbers,changes --color always {2..-1} | head -'.&lines.'"'
-      function! s:files()
-        let l:files = split(system($FZF_DEFAULT_COMMAND), '\n')
-        return s:prepend_icon(l:files)
-      endfunction
-
-      function! s:prepend_icon(candidates)
-        let l:result = []
-        for l:candidate in a:candidates
-          let l:filename = fnamemodify(l:candidate, ':p:t')
-          let l:icon = WebDevIconsGetFileTypeSymbol(l:filename, isdirectory(l:filename))
-          call add(l:result, printf('%s %s', l:icon, l:candidate))
-        endfor
-
-        return l:result
-      endfunction
-
-      function! s:edit_file(item)
-        let l:pos = stridx(a:item, ' ')
-        let l:file_path = a:item[pos+1:-1]
-        execute 'silent e' l:file_path
-      endfunction
-
-      call fzf#run({
-            \ 'source': <sid>files(),
-            \ 'sink':   function('s:edit_file'),
-            \ 'options': '-m --reverse ' . l:fzf_files_options,
-            \ 'down':    '40%',
-            \ 'window': 'call FloatingFZF()'})
-
-    endfunction
   "}}}
+  " GITGUTTER {{{
+    let g:gitgutter_sign_added = '▌'
+    let g:gitgutter_sign_modified = '▌'
+    let g:gitgutter_sign_removed = '▁'
+    let g:gitgutter_sign_removed_first_line = '▌'
+    let g:gitgutter_sign_modified_removed = '▌'
+  " }}}
   " GUTENTAGS & TAGBAR{{{
     " Tagbar Plugin Binding
     noremap <leader>tb :TagbarToggle<CR>
@@ -610,6 +578,50 @@
       autocmd ColorScheme * highlight QuickScopePrimary gui=bold guifg=#5ad5f1
       autocmd ColorScheme * highlight QuickScopeSecondary gui=bold guifg=#5ad5f1
     augroup END
+  " }}}
+" }}}
+
+" Functions {{{
+  " RESIZE MODE {{{
+    let g:resize_active=0
+    function! Switch_resize_keys()
+      if g:resize_active == 0
+        let g:resize_active = 1
+        " ESC should exit
+        nnoremap <esc> :call Switch_resize_keys()<CR>
+        " Switch to resize keys
+        nnoremap h <C-w><
+        nnoremap j <C-w>-
+        nnoremap k <C-w>+
+        nnoremap l <C-w>>
+        " Switch to window moving keys
+        nnoremap H <C-w>H
+        nnoremap J <C-w>J
+        nnoremap K <C-w>K
+        nnoremap L <C-w>L
+        nnoremap = <C-w>=
+        nnoremap _ <C-w>_
+        nnoremap + <C-w><bar>
+        echom 'Resize Mode'
+      else
+        let g:resize_active = 0
+        " Switch back to 'normal' keys
+        nnoremap <esc> <esc>
+        nnoremap h h
+        nnoremap j j
+        nnoremap k k
+        nnoremap l l
+        nnoremap K {
+        nnoremap J }
+        nnoremap H ^
+        nnoremap L $
+        nnoremap = =
+        nnoremap _ _
+        nnoremap + +
+        echom ''
+      endif
+    endfunction
+    nnoremap <silent> <Leader>r :call Switch_resize_keys()<CR>
   " }}}
 " }}}
 
