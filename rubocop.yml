@@ -1,0 +1,44 @@
+require:
+  - rubocop-rails
+  - rubocop-performance
+  - rubocop-rspec
+
+AllCops:
+  Exclude:
+    - db/**/*
+    - vendor/**/*
+    - node_modules/**/*
+    - bin/**/*
+
+Style/Documentation:
+  # Don't enforce top level documentation
+  Enabled: false
+
+Layout/LineLength:
+  # Allow lines longer than 80 characters
+  Enabled: false
+
+Style/StringLiterals:
+  # Enforce all strings be wrapped in double quotes
+  Enabled: true
+  EnforcedStyle: double_quotes
+
+Style/NumericLiterals:
+  # Don't enforce writing numbers with underscores
+  Enabled: false
+
+Style/MixinUsage:
+  # Don't care how files are included
+  Enabled: false
+
+# Style/HashEachMethods:
+#   # prefer .each_key and .each_value for hash enumeration
+#   Enabled: true
+
+# Style/HashTransformKeys:
+#   # prefer .transform_keys over .each_with_object({}) { ... }
+#   Enabled: true
+
+# Style/HashTransformValues:
+#   # prefer .transform_values over .each_with_object({}) { ... }
+#   Enabled: true
