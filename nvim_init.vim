@@ -9,6 +9,7 @@
   call plug#begin()
     Plug 'joshdick/onedark.vim'
 
+    Plug 'mbbill/undotree'
     Plug 'romainl/vim-cool'
     Plug 'Krasjet/auto.pairs'
     Plug 'rhysd/clever-f.vim'
@@ -74,12 +75,15 @@
   set belloff=all           " don't flash
   set pastetoggle=<F2>      " turn on paste mode with F2
   set noswapfile
+  set undodir="~/.cache/nvim/undo"
+  set undofile              " Persistant Undo
   set splitbelow            " split below, not above
   set splitright            " split right, not left
   set foldmethod=marker     " Fold code between {{{ and }}}
   set grepprg=rg\ --vimgrep " Use RipGrep for grepping
   set clipboard+=unnamedplus " Use system Clipboard
   set scrolloff=6          " Keep 10 lines above/below cursor
+  set lazyredraw           " Don't redaw screen while executing macro
   set winwidth=80
   set winheight=10
   set list
@@ -119,8 +123,10 @@
   " Relative line numbers in Normal mode, absolute numbers in Insert mode
   augroup numbertoggle
     autocmd!
-    autocmd WinEnter,BufEnter,FocusGained,InsertLeave * set relativenumber
-    autocmd WinLeave,BufLeave,FocusLost,InsertEnter   * set norelativenumber
+    " autocmd WinEnter,BufEnter,FocusGained,InsertLeave * set relativenumber
+    " autocmd WinLeave,BufLeave,FocusLost,InsertEnter   * set norelativenumber
+    autocmd InsertLeave * set relativenumber
+    autocmd InsertEnter * set norelativenumber
   augroup END
 
   " Autosource VIMRC on save
@@ -142,6 +148,9 @@
 
   nnoremap <leader>vi :tabe $MYVIMRC<cr>
   nnoremap <leader>so :source $MYVIMRC<cr>
+  nnoremap <leader>ut :UndotreeToggle<cr>
+  nnoremap <leader>pu :PlugUpdate<cr>
+  nnoremap <leader>pi :PlugInstall<cr>
   nnoremap <leader>bp obinding.pry<esc>:w<cr>^
   nnoremap <leader>fr :%s///gc<left><left><left><left>
   nnoremap <leader>j J
@@ -166,6 +175,11 @@
   nnoremap c "_c
   nnoremap C "_C
   nnoremap cc "_cc
+
+  " Make s/S/ss behave like d/D/dd without saving to register
+  nnoremap s  "_d
+  nnoremap S  "_D
+  nnoremap ss "_dd
 
   " Don't yank whitespace at the beginning of a line
   nnoremap Y ^y$
@@ -244,6 +258,10 @@
 
   " Output the current syntax group
   nnoremap <f10> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans <' . synIDattr(synID(line("."),col("."),0),"name") . "> lo <" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<cr>
+" }}}
+
+" Snippits {{{
+  inoremap ;do do<space>\|\|<cr>end<up><up><c-o>$<left>
 " }}}
 
 " Plugin Settings & Mappings {{{
@@ -603,6 +621,11 @@
   " SPLITJOIN {{{
     nnoremap <leader>sj :SplitjoinSplit<cr>
     nnoremap <leader>sk :SplitjoinJoin<cr>
+  " }}}
+  " UNDO TREE {{{
+    let g:undotree_WindowLayout       = 4
+    let g:undotree_SetFocusWhenToggle = 1
+    let g:undotree_ShortIndicators    = 1
   " }}}
 " }}}
 
