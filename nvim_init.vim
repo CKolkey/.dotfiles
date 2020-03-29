@@ -290,10 +290,6 @@
     " Set ALE's 200ms delay to zero
     let g:ale_lint_delay = 0
   "}}}
-" AUTOPAIRS {{{
-  " let g:AutoPairsMapCR = 0
-  " let g:AutoPairsMapBS = 0
-" }}}
   " DEFX Filetree browser {{{
     nnoremap <silent>- :Defx<CR>
     call defx#custom#option('_', {
@@ -588,6 +584,8 @@
       let g:LanguageClient_serverCommands = {
         \ 'ruby': ['~/.rbenv/shims/solargraph', 'stdio'],
         \ }
+      let g:LanguageClient_autoStart = 1
+      let g:LanguageClient_autoStop  = 0
     " }}}
   " MATCHUP{{{
     augroup matchup_matchparen_highlight
