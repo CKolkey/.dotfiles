@@ -11,6 +11,8 @@
 
     Plug 'romainl/vim-cool'
     Plug 'Krasjet/auto.pairs'
+    Plug 'rhysd/clever-f.vim'
+    Plug 'justinmk/vim-sneak'
     Plug 'sheerun/vim-polyglot'
     Plug 'andymass/vim-matchup'
     Plug 'airblade/vim-gitgutter'
@@ -40,6 +42,7 @@
 
     Plug 'tpope/vim-rails'
     Plug 'tpope/vim-endwise'
+    Plug 'tpope/vim-repeat'
     Plug 'tpope/vim-fugitive'
     Plug 'tpope/vim-sensible'
     Plug 'tpope/vim-surround'
@@ -75,13 +78,12 @@
   set splitright            " split right, not left
   set foldmethod=marker     " Fold code between {{{ and }}}
   set grepprg=rg\ --vimgrep " Use RipGrep for grepping
-  set clipboard=unnamedplus " Use System Clipboard
+  set clipboard+=unnamedplus " Use system Clipboard
   set scrolloff=6          " Keep 10 lines above/below cursor
   set winwidth=80
   set winheight=10
   set list
   set listchars=tab:››,nbsp:·,trail:•,extends:»,precedes:«
-  autocmd filetype slim,html,xml set listchars-=tab:>.
 
   set hidden
   set nobackup
@@ -108,15 +110,23 @@
 
   " Autoreload changed files
   set autoread
-  au CursorHold,CursorHoldI * checktime
-  autocmd FileChangedShellPost *
-    \ echohl WarningMsg | echo "File changed on disk - Buffer reloaded" | echohl None
+  augroup autoreadfiles
+    autocmd!
+    autocmd CursorHold,CursorHoldI * checktime
+    autocmd FileChangedShellPost * echohl WarningMsg | echo "File changed on disk - Buffer reloaded" | echohl None
+  augroup END
 
   " Relative line numbers in Normal mode, absolute numbers in Insert mode
   augroup numbertoggle
     autocmd!
     autocmd WinEnter,BufEnter,FocusGained,InsertLeave * set relativenumber
     autocmd WinLeave,BufLeave,FocusLost,InsertEnter   * set norelativenumber
+  augroup END
+
+  " Autosource VIMRC on save
+  augroup autosource
+    autocmd!
+    autocmd BufWritePost $MYVIMRC nested source $MYVIMRC
   augroup END
 " }}}
 
@@ -135,6 +145,7 @@
   nnoremap <leader>bp obinding.pry<esc>:w<cr>^
   nnoremap <leader>fr :%s///gc<left><left><left><left>
   nnoremap <leader>j J
+  nnoremap <leader>k :echo 'hello'<cr>
 
   " save file when leaving insert mode
   inoremap <esc> <esc>:w<cr>
@@ -146,12 +157,11 @@
   " rebinds semi-colon in normal mode.
   nnoremap ; :
 
-  " Swich P and p
-  nnoremap P p
-  nnoremap p P
-
-  " Bind `q` to close the buffer for help files
-  autocmd Filetype help nnoremap <buffer> q :q<CR>
+  augroup easyquit
+    autocmd!
+    " Bind `q` to close the buffer for help files
+    autocmd Filetype help nnoremap <buffer> q :q<CR>
+  augroup END
 
   " Change text without putting the text into register,
   nnoremap c "_c
@@ -290,6 +300,11 @@
     " Set ALE's 200ms delay to zero
     let g:ale_lint_delay = 0
   "}}}
+  " CLEVER-F {{{
+    let g:clever_f_smart_case        = 1
+    let g:clever_f_fix_key_direction = 1
+    " let g:clever_f_mark_char_color   = 'Function'
+  " }}}
   " DEFX Filetree browser {{{
     nnoremap <silent>- :Defx<CR>
     call defx#custom#option('_', {
@@ -339,8 +354,12 @@
       autocmd ColorScheme * highlight DefxIconsClosedTreeIcon guifg=#FFCB6B
     augroup END
 
-    autocmd BufWritePost * call defx#redraw() " Redraw on file change
-    autocmd FileType defx call s:defx_init()  " Load Settings
+    augroup defx_init
+      autocmd!
+      autocmd BufWritePost * call defx#redraw() " Redraw on file change
+      autocmd FileType defx call s:defx_init()  " Load Settings
+    augroup END
+
     function! s:defx_init()
       setl nonumber
       setl norelativenumber
@@ -350,6 +369,8 @@
       setl signcolumn=no
 
       " Define Mappings
+      nnoremap <silent><buffer><expr> <esc>
+        \ defx#do_action('quit')
       nnoremap <silent><buffer><expr> <CR>
         \ defx#do_action('multi', ['drop', 'quit'])
       nnoremap <silent><buffer><expr> .
@@ -567,17 +588,20 @@
     let g:matchup_matchparen_deferred  = 1
     let g:matchup_matchparen_offscreen = {}
   "}}}
-  " SPLITJOIN {{{
-    nnoremap sj :SplitjoinSplit<cr>
-    nnoremap sk :SplitjoinJoin<cr>
+  " SNEAK {{{
+    let g:sneak#label  = 0
+    let g:sneak#s_next = 1
+
+    map s <Plug>Sneak_s
+    map S <Plug>Sneak_S
+
+    highlight Sneak guifg=black guibg=red
+    highlight SneakScope guifg=red guibg=yellow
+    highlight SneakLabel guifg=red guibg=yellow
   " }}}
-  " QUICKSCOPE {{{
-    let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
-    augroup qs_colors
-      autocmd!
-      autocmd ColorScheme * highlight QuickScopePrimary gui=bold guifg=#5ad5f1
-      autocmd ColorScheme * highlight QuickScopeSecondary gui=bold guifg=#5ad5f1
-    augroup END
+  " SPLITJOIN {{{
+    nnoremap <leader>sj :SplitjoinSplit<cr>
+    nnoremap <leader>sk :SplitjoinJoin<cr>
   " }}}
 " }}}
 
@@ -608,8 +632,8 @@
         " Switch back to 'normal' keys
         nnoremap <esc> <esc>
         nnoremap h h
-        nnoremap j j
-        nnoremap k k
+        nnoremap k gk
+        nnoremap j gj
         nnoremap l l
         nnoremap K {
         nnoremap J }
