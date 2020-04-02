@@ -29,13 +29,12 @@
     Plug 'dense-analysis/ale'
     Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
     Plug 'Shougo/neco-syntax'
-    Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
 
     Plug 'ludovicchabant/vim-gutentags'
     Plug 'skywind3000/gutentags_plus'
     Plug 'majutsushi/tagbar'
 
-    Plug 'junegunn/fzf', { 'do': './install --bin' }
+    Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'junegunn/fzf.vim'
 
     Plug 'vim-airline/vim-airline'
@@ -52,6 +51,13 @@
 " }}}
 
 " General Settings {{{
+  " Cursor Settings {{{
+    " UNDERSCORE for replace, BOX for normal, PIPE for insert
+    let &t_SI = "\<Esc>[6 q"
+    let &t_SR = "\<Esc>[4 q"
+    let &t_EI = "\<Esc>[2 q"
+  " }}}
+
   filetype plugin indent on
   set cursorline            " Highlight cursor line
   set number                " Show line number
@@ -75,7 +81,7 @@
   set belloff=all           " don't flash
   set pastetoggle=<F2>      " turn on paste mode with F2
   set noswapfile
-  set undodir="~/.cache/nvim/undo"
+  set undodir=$HOME/.cache/nvim/undo
   set undofile              " Persistant Undo
   set splitbelow            " split below, not above
   set splitright            " split right, not left
@@ -111,36 +117,173 @@
       set termguicolors
     endif
   endif
-
-  " Autoreload changed files
-  set autoread
-  augroup autoreadfiles
-    autocmd!
-    autocmd CursorHold,CursorHoldI * checktime
-    autocmd FileChangedShellPost * echohl WarningMsg | echo "File changed on disk - Buffer reloaded" | echohl None
-  augroup END
-
-  " Relative line numbers in Normal mode, absolute numbers in Insert mode
-  augroup numbertoggle
-    autocmd!
-    " autocmd WinEnter,BufEnter,FocusGained,InsertLeave * set relativenumber
-    " autocmd WinLeave,BufLeave,FocusLost,InsertEnter   * set norelativenumber
-    autocmd InsertLeave * set relativenumber
-    autocmd InsertEnter * set norelativenumber
-  augroup END
-
-  " Autosource VIMRC on save
-  augroup autosource
-    autocmd!
-    autocmd BufWritePost $MYVIMRC nested source $MYVIMRC
-  augroup END
 " }}}
 
-" Cursor Settings {{{
-  " UNDERSCORE for replace, BOX for normal, PIPE for insert
-  let &t_SI = "\<Esc>[6 q"
-  let &t_SR = "\<Esc>[4 q"
-  let &t_EI = "\<Esc>[2 q"
+" AutoCommands {{{
+" Autoreload changed files {{{
+    set autoread
+    augroup autoreadfiles
+      autocmd!
+      autocmd CursorHold,CursorHoldI * checktime
+      autocmd FileChangedShellPost * echohl WarningMsg | echo "File changed on disk - Buffer reloaded" | echohl None
+    augroup END
+" }}}
+  " Relative line numbers in Normal mode, absolute numbers in Insert mode {{{
+    augroup numbertoggle
+      autocmd!
+      autocmd InsertLeave * set relativenumber
+      autocmd InsertEnter * set norelativenumber
+    augroup END
+  " }}}
+  " Autosource VIMRC on save {{{
+    augroup autosource
+      autocmd!
+      autocmd BufWritePost $MYVIMRC nested source $MYVIMRC
+    augroup END
+  " }}}
+  " Terminal Behavior {{{
+    augroup TerminalBehavior
+      autocmd!
+      autocmd TermOpen * startinsert
+      autocmd TermOpen * setlocal listchars= nonumber norelativenumber
+    augroup END
+  " }}}
+" }}}
+
+" Functions {{{
+  " RESIZE MODE {{{
+    let g:resize_active=0
+    function! Switch_resize_keys()
+      if g:resize_active == 0
+        let g:resize_active = 1
+        " ESC should exit
+        nnoremap <esc> :call Switch_resize_keys()<CR>
+        " Switch to resize keys
+        nnoremap h <C-w><
+        nnoremap j <C-w>-
+        nnoremap k <C-w>+
+        nnoremap l <C-w>>
+        " Switch to window moving keys
+        nnoremap H <C-w>H
+        nnoremap J <C-w>J
+        nnoremap K <C-w>K
+        nnoremap L <C-w>L
+        nnoremap = <C-w>=
+        nnoremap _ <C-w>_
+        nnoremap + <C-w><bar>
+        echom 'Resize Mode'
+      else
+        let g:resize_active = 0
+        " Switch back to 'normal' keys
+        nnoremap <esc> <esc>
+        nnoremap h h
+        nnoremap k gk
+        nnoremap j gj
+        nnoremap l l
+        nnoremap K {
+        nnoremap J }
+        nnoremap H ^
+        nnoremap L $
+        nnoremap = =
+        nnoremap _ _
+        nnoremap + +
+        echom ''
+      endif
+    endfunction
+    nnoremap <silent> <Leader>r :call Switch_resize_keys()<CR>
+  " }}}
+  " CLEAN UI FOR TERMINAL {{{
+    " Enables UI styles suitable for terminals etc
+    function! CleanUIforTerm() abort
+      echo ''
+      setlocal listchars=
+        \ nonumber
+        \ norelativenumber
+        \ nowrap
+        \ winfixwidth
+        \ laststatus=0
+        \ noshowmode
+        \ noruler
+        \ scl=no
+      autocmd BufLeave <buffer> set laststatus=2 showmode ruler
+    endfunction
+  " }}}
+  " TERMINAL DRAWER {{{
+    " depends on: CLEAN UI and Terminal Handling
+    let g:term_buf = 0
+    let g:term_win = 0
+    function! TermToggle(height)
+        if win_gotoid(g:term_win)
+            hide
+        else
+            botright new
+            exec "resize " . a:height
+            try
+                exec "buffer " . g:term_buf
+            catch
+                call termopen($SHELL, {"detach": 0})
+                let g:term_buf = bufnr("")
+            endtry
+
+            " Terminal go back to normal mode
+            tnoremap <Esc> <C-\><C-n>
+            call CleanUIforTerm()
+            startinsert!
+            let g:term_win = win_getid()
+        endif
+    endfunction
+    " Toggle terminal on/off (neovim)
+    nnoremap <silent><leader>tt :call TermToggle(12)<CR>
+    tnoremap <silent><leader>tt <C-\><C-n>:call TermToggle(12)<CR>
+  " }}}
+  " LAZYGIT {{{
+    function! ToggleLazyGit()
+      call ToggleTerm('lazygit')
+    endfunction
+
+    nnoremap <silent><leader>g :call ToggleLazyGit()<cr>
+    tnoremap <silent><leader>g <C-\><C-n>:call ToggleLazyGit()<CR>
+  " }}}
+  " CREATE FLOATING WINDOW {{{
+    function! CreateCenteredFloatingWindow()
+      let width  = float2nr(&columns * 0.9)
+      let height = float2nr(&lines * 0.8)
+      let top    = ((&lines - height) / 2) - 1
+      let left   = (&columns - width) / 2
+      let opts   = {'relative': 'editor', 'row': top, 'col': left, 'width': width, 'height': height, 'style': 'minimal'}
+
+      let top   = "╭" . repeat("─", width - 2) . "╮"
+      let mid   = "│" . repeat(" ", width - 2) . "│"
+      let bot   = "╰" . repeat("─", width - 2) . "╯"
+      let lines = [top] + repeat([mid], height - 2) + [bot]
+      let s:buf = nvim_create_buf(v:false, v:true)
+      call nvim_buf_set_lines(s:buf, 0, -1, v:true, lines)
+      call nvim_open_win(s:buf, v:true, opts)
+      set winhl=Normal:Floating
+      let opts.row    += 1
+      let opts.height -= 2
+      let opts.col    += 2
+      let opts.width  -= 4
+      call nvim_open_win(nvim_create_buf(v:false, v:true), v:true, opts)
+      autocmd BufWipeout <buffer> exe 'bwipeout '.s:buf
+    endfunction
+  " }}}
+  " TOGGLE TERMINAL && ON TERMINAL EXIT {{{
+    function! ToggleTerm(cmd)
+      if empty(bufname(a:cmd))
+        call CreateCenteredFloatingWindow()
+        call termopen(a:cmd, { 'on_exit': function('OnTermExit') })
+      else
+        bwipeout!
+      endif
+    endfunction
+
+    function! OnTermExit(job_id, code, event) dict
+      if a:code == 0
+        bwipeout!
+      endif
+    endfunction
+  " }}}
 " }}}
 
 " Key Mappings {{{
@@ -260,10 +403,6 @@
   nnoremap <f10> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans <' . synIDattr(synID(line("."),col("."),0),"name") . "> lo <" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<cr>
 " }}}
 
-" Snippits {{{
-  inoremap ;do do<space>\|\|<cr>end<up><up><c-o>$<left>
-" }}}
-
 " Plugin Settings & Mappings {{{
   " AIRLINE{{{
     let g:airline#extensions#ale#enabled          = 1
@@ -307,15 +446,10 @@
     let g:ale_sign_column_always = 1
     let g:ale_sign_error         = '!!'
     let g:ale_sign_warning       = '>>'
+    let g:ale_lint_delay         = 0
 
-    " Lint always in Normal Mode
-    let g:ale_lint_on_text_changed = 'normal'
-
-    " Lint when leaving Insert Mode but don't lint when in Insert Mode
-    let g:ale_lint_on_insert_leave = 1
-
+    let g:ale_ruby_solargraph_executable = "~/.rbenv/shims/solargraph"
     " Set ALE's 200ms delay to zero
-    let g:ale_lint_delay = 0
   "}}}
   " CLEVER-F {{{
     let g:clever_f_smart_case        = 1
@@ -441,13 +575,10 @@
     endfunction
 
     let g:deoplete#enable_at_startup = 1
-    call deoplete#custom#option('sources', {
-      \ '_': ['LanguageClient', 'around', 'buffer', 'file', 'syntax'],
-      \ })
-
     call deoplete#custom#option({
       \ 'num_processes' : -1,
-      \ 'max_list'      : 200,
+      \ 'max_list'      : 20,
+      \ 'sources'       : { '_': ['ale', 'around', 'buffer', 'file', 'syntax'] }
       \ })
   " }}}
   " EASYALIGN{{{
@@ -463,7 +594,7 @@
     let $FZF_DEFAULT_COMMAND = 'rg --files --no-ignore-vcs --hidden -g "!{node_modules,.git}"'
     let $FZF_DEFAULT_OPTS    = ' --color=dark --color=fg:15,bg:-1,hl:1,fg+:#ffffff,bg+:0,hl+:1 --color=info:0,prompt:0,pointer:12,marker:4,spinner:11,header:-1 --layout=reverse  --margin=1,4'
 
-    let g:fzf_layout = { 'window': 'call FloatingFZF()' }
+    let g:fzf_layout = { 'window': 'call CreateCenteredFloatingWindow()' }
     let g:fzf_action = {
           \ 'ctrl-s': 'split',
           \ 'ctrl-v': 'vsplit',
@@ -483,7 +614,6 @@
           \ 'spinner': ['fg', 'Label'],
           \ 'header':  ['fg', 'Comment'] }
 
-
     function! RipgrepFzf(query, fullscreen)
       let command_fmt     = 'rg --column --line-number --no-heading --color=always --smart-case %s || true'
       let initial_command = printf(command_fmt, shellescape(a:query))
@@ -492,24 +622,6 @@
       call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
     endfunction
     command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
-
-    function! FloatingFZF()
-      let buf        = nvim_create_buf(v:false, v:true)
-      call setbufvar(buf, '&signcolumn', 'no')
-      let height     = float2nr(25)
-      let width      = float2nr(&columns * 0.9)
-      let horizontal = float2nr((&columns - width) / 2)
-      let vertical   = 3
-      let opts       = {
-            \ 'relative': 'editor',
-            \ 'row':      vertical,
-            \ 'col':      horizontal,
-            \ 'width':    width,
-            \ 'height':   height,
-            \ 'style':    'minimal'
-            \ }
-      call nvim_open_win(buf, v:true, opts)
-    endfunction
   "}}}
   " GITGUTTER {{{
     let g:gitgutter_sign_added = '▌'
@@ -588,15 +700,6 @@
       \ ]
 
   " }}}
-    " LSP Language Server Client {{{
-      nnoremap <silent> <leader>rn :call LanguageClient#textDocument_rename()<CR>
-      nnoremap <leader>cm :call LanguageClient_contextMenu()<CR>
-      let g:LanguageClient_serverCommands = {
-        \ 'ruby': ['~/.rbenv/shims/solargraph', 'stdio'],
-        \ }
-      let g:LanguageClient_autoStart = 1
-      let g:LanguageClient_autoStop  = 0
-    " }}}
   " MATCHUP{{{
     augroup matchup_matchparen_highlight
       autocmd!
@@ -629,55 +732,15 @@
   " }}}
 " }}}
 
-" Functions {{{
-  " RESIZE MODE {{{
-    let g:resize_active=0
-    function! Switch_resize_keys()
-      if g:resize_active == 0
-        let g:resize_active = 1
-        " ESC should exit
-        nnoremap <esc> :call Switch_resize_keys()<CR>
-        " Switch to resize keys
-        nnoremap h <C-w><
-        nnoremap j <C-w>-
-        nnoremap k <C-w>+
-        nnoremap l <C-w>>
-        " Switch to window moving keys
-        nnoremap H <C-w>H
-        nnoremap J <C-w>J
-        nnoremap K <C-w>K
-        nnoremap L <C-w>L
-        nnoremap = <C-w>=
-        nnoremap _ <C-w>_
-        nnoremap + <C-w><bar>
-        echom 'Resize Mode'
-      else
-        let g:resize_active = 0
-        " Switch back to 'normal' keys
-        nnoremap <esc> <esc>
-        nnoremap h h
-        nnoremap k gk
-        nnoremap j gj
-        nnoremap l l
-        nnoremap K {
-        nnoremap J }
-        nnoremap H ^
-        nnoremap L $
-        nnoremap = =
-        nnoremap _ _
-        nnoremap + +
-        echom ''
-      endif
-    endfunction
-    nnoremap <silent> <Leader>r :call Switch_resize_keys()<CR>
-  " }}}
-" }}}
-
 " Language Settings {{{
   " Ruby {{{
     let ruby_operators = 1
     let ruby_pseudo_operators = 1
   " }}}
+" }}}
+
+" Snippits {{{
+  inoremap ;do do<space>\|\|<cr>end<up><up><c-o>$<left>
 " }}}
 
 " Colorscheme & Highlights {{{
