@@ -57,7 +57,6 @@
     let &t_SR = "\<Esc>[4 q"
     let &t_EI = "\<Esc>[2 q"
   " }}}
-
   filetype plugin indent on
   set cursorline            " Highlight cursor line
   set number                " Show line number
@@ -117,10 +116,19 @@
       set termguicolors
     endif
   endif
+
+  " As Root {{{
+    if exists('$SUDO_USER')
+      set noswapfile
+      set nobackup
+      set nowritebackup
+      set noundofile
+    endif
+  " }}}
 " }}}
 
 " AutoCommands {{{
-" Autoreload changed files {{{
+" AUTORELOAD CHANGED FILES {{{
     set autoread
     augroup autoreadfiles
       autocmd!
@@ -128,24 +136,29 @@
       autocmd FileChangedShellPost * echohl WarningMsg | echo "File changed on disk - Buffer reloaded" | echohl None
     augroup END
 " }}}
-  " Relative line numbers in Normal mode, absolute numbers in Insert mode {{{
+" AUTOSAVE CURRENT BUFFER {{{
+  augroup autosavebuffer
+    autocmd!
+    autocmd InsertLeave * nested silent! update
+  augroup end
+" }}}
+  " RELATIVE LINE NUMBERS IN NORMAL MODE, ABSOLUTE NUMBERS IN INSERT MODE {{{
     augroup numbertoggle
       autocmd!
       autocmd InsertLeave * set relativenumber
       autocmd InsertEnter * set norelativenumber
     augroup END
   " }}}
-  " Autosource VIMRC on save {{{
+  " AUTOSOURCE VIMRC ON SAVE {{{
     augroup autosource
       autocmd!
       autocmd BufWritePost $MYVIMRC nested source $MYVIMRC
     augroup END
   " }}}
-  " Terminal Behavior {{{
+  " TERMINAL BEHAVIOR {{{
     augroup TerminalBehavior
       autocmd!
-      autocmd TermOpen * startinsert
-      autocmd TermOpen * setlocal listchars= nonumber norelativenumber
+      autocmd TermOpen * setlocal listchars= nonumber norelativenumber | startinsert
     augroup END
   " }}}
 " }}}
@@ -153,11 +166,11 @@
 " Functions {{{
   " RESIZE MODE {{{
     let g:resize_active=0
-    function! Switch_resize_keys()
+    function! ToggleResizeMode()
       if g:resize_active == 0
         let g:resize_active = 1
         " ESC should exit
-        nnoremap <esc> :call Switch_resize_keys()<CR>
+        nnoremap <esc> :call ToggleResizeMode()<CR>
         " Switch to resize keys
         nnoremap h <C-w><
         nnoremap j <C-w>-
@@ -190,7 +203,7 @@
         echom ''
       endif
     endfunction
-    nnoremap <silent> <Leader>r :call Switch_resize_keys()<CR>
+    nnoremap <silent> <Leader>r :call ToggleResizeMode()<CR>
   " }}}
   " CLEAN UI FOR TERMINAL {{{
     " Enables UI styles suitable for terminals etc
@@ -209,32 +222,33 @@
     endfunction
   " }}}
   " TERMINAL DRAWER {{{
-    " depends on: CLEAN UI and Terminal Handling
-    nnoremap <silent><leader>tt           :call ToggleTerminalDrawer(12)<CR>
-    tnoremap <silent><leader>tt <C-\><C-n>:call ToggleTerminalDrawer(12)<CR>
+    " depends on: CLEAN UI and Terminal Behavior
+    nnoremap <silent><leader>\           :call ToggleTerminalDrawer()<CR>
+    tnoremap <silent><leader>\ <C-\><C-n>:call ToggleTerminalDrawer()<CR>
 
-    let g:term_buf = 0
-    let g:term_win = 0
-    function! ToggleTerminalDrawer(height)
-        if win_gotoid(g:term_win)
-            hide
+    let g:terminal_drawer = { 'win_id': v:null, 'buffer_id': v:null }
+    function! ToggleTerminalDrawer() abort
+      if win_gotoid(g:terminal_drawer.win_id)
+        hide
+      else
+        if !g:terminal_drawer.buffer_id
+          botright new
+          call termopen($SHELL, {"detach": 0})
+          let g:terminal_drawer.buffer_id = bufnr("")
         else
-            botright new
-            exec "resize " . a:height
-            try
-                exec "buffer " . g:term_buf
-            catch
-                call termopen($SHELL, {"detach": 0})
-                let g:term_buf = bufnr("")
-            endtry
-
-            tnoremap <buffer><Esc> <C-\><C-n>
-            nnoremap <buffer><silent><Esc> :q<cr>
-            nnoremap <buffer><silent> q :q<CR>
-            startinsert!
-            call CleanUIforTerm()
-            let g:term_win = win_getid()
+          split
+          exec "buffer " g:terminal_drawer.buffer_id
         endif
+
+        exec "resize 12"
+        call CleanUIforTerm()
+        startinsert!
+        let g:terminal_drawer.win_id = win_getid()
+
+        tnoremap <buffer><Esc> <C-\><C-n>
+        nnoremap <buffer><silent><Esc> :q<cr>
+        nnoremap <buffer><silent> q :q<CR>
+      endif
     endfunction
   " }}}
   " LAZYGIT {{{
@@ -252,23 +266,28 @@
       let top    = ((&lines - height) / 2) - 1
       let left   = (&columns - width) / 2
       let opts   = { 'relative': 'editor', 'row': top, 'col': left, 'width': width, 'height': height, 'style': 'minimal' }
+      let top    = "╭" . repeat("─", width - 2) . "╮"
+      let mid    = "│" . repeat(" ", width - 2) . "│"
+      let bot    = "╰" . repeat("─", width - 2) . "╯"
+      let lines  = [top] + repeat([mid], height - 2) + [bot]
+      let s:buf  = nvim_create_buf(v:false, v:true)
 
-      let top   = "╭" . repeat("─", width - 2) . "╮"
-      let mid   = "│" . repeat(" ", width - 2) . "│"
-      let bot   = "╰" . repeat("─", width - 2) . "╯"
-      let lines = [top] + repeat([mid], height - 2) + [bot]
-      let s:buf = nvim_create_buf(v:false, v:true)
       call nvim_buf_set_lines(s:buf, 0, -1, v:true, lines)
       call nvim_open_win(s:buf, v:true, opts)
       set winhl=Normal:Floating
-      let opts.row    += 1
-      let opts.height -= 2
-      let opts.col    += 2
-      let opts.width  -= 4
-      call nvim_open_win(nvim_create_buf(v:false, v:true), v:true, opts)
       call InvertBackground()
+
+      call nvim_open_win(nvim_create_buf(v:false, v:true), v:true, CreatePadding(opts))
       autocmd BufWipeout <buffer> exe 'bwipeout '.s:buf
       autocmd BufWipeout <buffer> call ResetBackground()
+    endfunction
+
+    function! CreatePadding(opts)
+      let a:opts.row    += 1
+      let a:opts.height -= 2
+      let a:opts.col    += 2
+      let a:opts.width  -= 4
+      return a:opts
     endfunction
   " }}}
   " TOGGLE TERMINAL && ON TERMINAL EXIT {{{
@@ -303,19 +322,15 @@
 " }}}
 
 " Key Mappings {{{
-  let mapleader = "\<Space>"
+  let mapleader = "\\"
 
   nnoremap <leader>vi :tabe $MYVIMRC<cr>
-  nnoremap <leader>so :source $MYVIMRC<cr>
   nnoremap <leader>ut :UndotreeToggle<cr>
   nnoremap <leader>pu :PlugUpdate<cr>
   nnoremap <leader>pi :PlugInstall<cr>
-  nnoremap <leader>bp obinding.pry<esc>:w<cr>^
+  nnoremap <leader>bb obinding.pry<esc>:w<cr>^
   nnoremap <leader>fr :%s///gc<left><left><left><left>
   nnoremap <leader>j J
-
-  " save file when leaving insert mode
-  inoremap <esc> <esc>:w<cr>
 
   " More sane vertical navigation - respects columns
   nnoremap k gk
@@ -615,20 +630,21 @@
           \ 'ctrl-s': 'split',
           \ 'ctrl-v': 'vsplit',
           \ 'ctrl-t': 'tab split' }
+
     let g:fzf_colors = {
           \ 'fg':      ['fg', 'Normal'],
-          \ 'bg':      ['bg', '#2c323c'],
-          \ 'hl':      ['fg', 'Comment'],
-          \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
+          \ 'bg':      ['bg', 'Normal'],
+          \ 'hl':      ['fg', 'Keyword'],
+          \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'PreProc'],
           \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
-          \ 'hl+':     ['fg', 'Statement'],
-          \ 'info':    ['fg', 'PreProc'],
-          \ 'border':  ['fg', 'Ignore'],
+          \ 'hl+':     ['fg', 'Keyword'],
+          \ 'info':    ['fg', 'Statement'],
+          \ 'border':  ['fg', 'Comment'],
           \ 'prompt':  ['fg', 'Conditional'],
-          \ 'pointer': ['fg', 'Exception'],
+          \ 'pointer': ['fg', 'Statement'],
           \ 'marker':  ['fg', 'Keyword'],
           \ 'spinner': ['fg', 'Label'],
-          \ 'header':  ['fg', 'Comment'] }
+          \ 'header':  ['fg', 'Keyword'] }
 
     function! RipgrepFzf(query, fullscreen)
       let command_fmt     = 'rg --column --line-number --no-heading --color=always --smart-case %s || true'
