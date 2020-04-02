@@ -29,7 +29,6 @@
     Plug 'dense-analysis/ale'
     Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
     Plug 'Shougo/neco-syntax'
-    Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
 
     Plug 'ludovicchabant/vim-gutentags'
     Plug 'skywind3000/gutentags_plus'
@@ -441,13 +440,11 @@
     endfunction
 
     let g:deoplete#enable_at_startup = 1
-    call deoplete#custom#option('sources', {
-      \ '_': ['LanguageClient', 'around', 'buffer', 'file', 'syntax'],
-      \ })
 
     call deoplete#custom#option({
       \ 'num_processes' : -1,
-      \ 'max_list'      : 200,
+      \ 'max_list'      : 20,
+      \ 'sources'       : { '_': ['ale', 'around', 'buffer', 'file', 'syntax'] }
       \ })
   " }}}
   " EASYALIGN{{{
