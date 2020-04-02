@@ -593,15 +593,6 @@
       \ ]
 
   " }}}
-    " LSP Language Server Client {{{
-      nnoremap <silent> <leader>rn :call LanguageClient#textDocument_rename()<CR>
-      nnoremap <leader>cm :call LanguageClient_contextMenu()<CR>
-      let g:LanguageClient_serverCommands = {
-        \ 'ruby': ['~/.rbenv/shims/solargraph', 'stdio'],
-        \ }
-      let g:LanguageClient_autoStart = 1
-      let g:LanguageClient_autoStop  = 0
-    " }}}
   " MATCHUP{{{
     augroup matchup_matchparen_highlight
       autocmd!
