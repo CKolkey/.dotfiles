@@ -212,7 +212,7 @@
     " depends on: CLEAN UI and Terminal Handling
     let g:term_buf = 0
     let g:term_win = 0
-    function! TermToggle(height)
+    function! ToggleTerminalDrawer(height)
         if win_gotoid(g:term_win)
             hide
         else
@@ -225,16 +225,20 @@
                 let g:term_buf = bufnr("")
             endtry
 
-            " Terminal go back to normal mode
-            tnoremap <Esc> <C-\><C-n>
-            call CleanUIforTerm()
+            " First esc takes you to normal mode, second escape closes buffer
+            tnoremap <buffer><Esc> <C-\><C-n>
+            nnoremap <buffer><silent><Esc> :q<cr>
+            nnoremap <buffer><silent> q :q<CR>
+
             startinsert!
+            call CleanUIforTerm()
+
             let g:term_win = win_getid()
         endif
     endfunction
-    " Toggle terminal on/off (neovim)
-    nnoremap <silent><leader>tt :call TermToggle(12)<CR>
-    tnoremap <silent><leader>tt <C-\><C-n>:call TermToggle(12)<CR>
+
+    nnoremap <silent><leader>t           :call ToggleTerminalDrawer(12)<CR>
+    tnoremap <silent><leader>t <C-\><C-n>:call ToggleTerminalDrawer(12)<CR>
   " }}}
   " LAZYGIT {{{
     function! ToggleLazyGit()
@@ -265,7 +269,9 @@
       let opts.col    += 2
       let opts.width  -= 4
       call nvim_open_win(nvim_create_buf(v:false, v:true), v:true, opts)
+      call InvertBackground()
       autocmd BufWipeout <buffer> exe 'bwipeout '.s:buf
+      autocmd BufWipeout <buffer> call ResetBackground()
     endfunction
   " }}}
   " TOGGLE TERMINAL && ON TERMINAL EXIT {{{
@@ -282,6 +288,19 @@
       if a:code == 0
         bwipeout!
       endif
+    endfunction
+  " }}}
+  " INVERT && RESET BACKGROUND {{{
+    function! InvertBackground()
+      hi InactiveWindow guibg=NONE
+      hi ActiveWindow   guibg=#2c323c
+      set winhighlight=Normal:ActiveWindow,NormalNC:InactiveWindow
+    endfunction
+
+    function! ResetBackground()
+      hi ActiveWindow   guibg=NONE
+      hi InactiveWindow guibg=#2c323c
+      set winhighlight=Normal:ActiveWindow,NormalNC:InactiveWindow
     endfunction
   " }}}
 " }}}
