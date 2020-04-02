@@ -51,6 +51,13 @@
 " }}}
 
 " General Settings {{{
+  " Cursor Settings {{{
+    " UNDERSCORE for replace, BOX for normal, PIPE for insert
+    let &t_SI = "\<Esc>[6 q"
+    let &t_SR = "\<Esc>[4 q"
+    let &t_EI = "\<Esc>[2 q"
+  " }}}
+
   filetype plugin indent on
   set cursorline            " Highlight cursor line
   set number                " Show line number
@@ -112,7 +119,7 @@
   endif
 " }}}
 
-" Autocommands {{{
+" AutoCommands {{{
 " Autoreload changed files {{{
     set autoread
     augroup autoreadfiles
@@ -134,13 +141,149 @@
       autocmd BufWritePost $MYVIMRC nested source $MYVIMRC
     augroup END
   " }}}
+  " Terminal Behavior {{{
+    augroup TerminalBehavior
+      autocmd!
+      autocmd TermOpen * startinsert
+      autocmd TermOpen * setlocal listchars= nonumber norelativenumber
+    augroup END
+  " }}}
 " }}}
 
-" Cursor Settings {{{
-  " UNDERSCORE for replace, BOX for normal, PIPE for insert
-  let &t_SI = "\<Esc>[6 q"
-  let &t_SR = "\<Esc>[4 q"
-  let &t_EI = "\<Esc>[2 q"
+" Functions {{{
+  " RESIZE MODE {{{
+    let g:resize_active=0
+    function! Switch_resize_keys()
+      if g:resize_active == 0
+        let g:resize_active = 1
+        " ESC should exit
+        nnoremap <esc> :call Switch_resize_keys()<CR>
+        " Switch to resize keys
+        nnoremap h <C-w><
+        nnoremap j <C-w>-
+        nnoremap k <C-w>+
+        nnoremap l <C-w>>
+        " Switch to window moving keys
+        nnoremap H <C-w>H
+        nnoremap J <C-w>J
+        nnoremap K <C-w>K
+        nnoremap L <C-w>L
+        nnoremap = <C-w>=
+        nnoremap _ <C-w>_
+        nnoremap + <C-w><bar>
+        echom 'Resize Mode'
+      else
+        let g:resize_active = 0
+        " Switch back to 'normal' keys
+        nnoremap <esc> <esc>
+        nnoremap h h
+        nnoremap k gk
+        nnoremap j gj
+        nnoremap l l
+        nnoremap K {
+        nnoremap J }
+        nnoremap H ^
+        nnoremap L $
+        nnoremap = =
+        nnoremap _ _
+        nnoremap + +
+        echom ''
+      endif
+    endfunction
+    nnoremap <silent> <Leader>r :call Switch_resize_keys()<CR>
+  " }}}
+  " CLEAN UI FOR TERMINAL {{{
+    " Enables UI styles suitable for terminals etc
+    function! CleanUIforTerm() abort
+      echo ''
+      setlocal listchars=
+        \ nonumber
+        \ norelativenumber
+        \ nowrap
+        \ winfixwidth
+        \ laststatus=0
+        \ noshowmode
+        \ noruler
+        \ scl=no
+      autocmd BufLeave <buffer> set laststatus=2 showmode ruler
+    endfunction
+  " }}}
+  " TERMINAL DRAWER {{{
+    " depends on: CLEAN UI and Terminal Handling
+    let g:term_buf = 0
+    let g:term_win = 0
+    function! TermToggle(height)
+        if win_gotoid(g:term_win)
+            hide
+        else
+            botright new
+            exec "resize " . a:height
+            try
+                exec "buffer " . g:term_buf
+            catch
+                call termopen($SHELL, {"detach": 0})
+                let g:term_buf = bufnr("")
+            endtry
+
+            " Terminal go back to normal mode
+            tnoremap <Esc> <C-\><C-n>
+            call CleanUIforTerm()
+            startinsert!
+            let g:term_win = win_getid()
+        endif
+    endfunction
+    " Toggle terminal on/off (neovim)
+    nnoremap <silent><leader>tt :call TermToggle(12)<CR>
+    tnoremap <silent><leader>tt <C-\><C-n>:call TermToggle(12)<CR>
+  " }}}
+  " LAZYGIT {{{
+    function! ToggleLazyGit()
+      call ToggleTerm('lazygit')
+    endfunction
+
+    nnoremap <silent><leader>g :call ToggleLazyGit()<cr>
+    tnoremap <silent><leader>g <C-\><C-n>:call ToggleLazyGit()<CR>
+  " }}}
+  " CREATE FLOATING WINDOW {{{
+    function! CreateCenteredFloatingWindow()
+      let width  = float2nr(&columns * 0.9)
+      let height = float2nr(&lines * 0.8)
+      let top    = ((&lines - height) / 2) - 1
+      let left   = (&columns - width) / 2
+      let opts   = {'relative': 'editor', 'row': top, 'col': left, 'width': width, 'height': height, 'style': 'minimal'}
+
+      let top   = "╭" . repeat("─", width - 2) . "╮"
+      let mid   = "│" . repeat(" ", width - 2) . "│"
+      let bot   = "╰" . repeat("─", width - 2) . "╯"
+      let lines = [top] + repeat([mid], height - 2) + [bot]
+      let s:buf = nvim_create_buf(v:false, v:true)
+      call nvim_buf_set_lines(s:buf, 0, -1, v:true, lines)
+      call nvim_open_win(s:buf, v:true, opts)
+      set winhl=Normal:Floating
+      let opts.row    += 1
+      let opts.height -= 2
+      let opts.col    += 2
+      let opts.width  -= 4
+      call nvim_open_win(nvim_create_buf(v:false, v:true), v:true, opts)
+      autocmd BufWipeout <buffer> exe 'bwipeout '.s:buf
+    endfunction
+  " }}}
+  " TOGGLE TERMINAL && ON TERMINAL EXIT {{{
+    function! ToggleTerm(cmd)
+      if empty(bufname(a:cmd))
+        call CreateCenteredFloatingWindow()
+        call termopen(a:cmd, { 'on_exit': function('OnTermExit') })
+      else
+        bwipeout!
+      endif
+    endfunction
+
+    function! OnTermExit(job_id, code, event) dict
+      if a:code == 0
+        bwipeout!
+      endif
+    endfunction
+  " }}}
 " }}}
 
 " Key Mappings {{{
@@ -258,10 +401,6 @@
 
   " Output the current syntax group
   nnoremap <f10> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans <' . synIDattr(synID(line("."),col("."),0),"name") . "> lo <" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<cr>
-" }}}
-
-" Snippits {{{
-  inoremap ;do do<space>\|\|<cr>end<up><up><c-o>$<left>
 " }}}
 
 " Plugin Settings & Mappings {{{
@@ -455,7 +594,7 @@
     let $FZF_DEFAULT_COMMAND = 'rg --files --no-ignore-vcs --hidden -g "!{node_modules,.git}"'
     let $FZF_DEFAULT_OPTS    = ' --color=dark --color=fg:15,bg:-1,hl:1,fg+:#ffffff,bg+:0,hl+:1 --color=info:0,prompt:0,pointer:12,marker:4,spinner:11,header:-1 --layout=reverse  --margin=1,4'
 
-    let g:fzf_layout = { 'window': 'call FloatingPaddedFZF()' }
+    let g:fzf_layout = { 'window': 'call CreateCenteredFloatingWindow()' }
     let g:fzf_action = {
           \ 'ctrl-s': 'split',
           \ 'ctrl-v': 'vsplit',
@@ -475,7 +614,6 @@
           \ 'spinner': ['fg', 'Label'],
           \ 'header':  ['fg', 'Comment'] }
 
-
     function! RipgrepFzf(query, fullscreen)
       let command_fmt     = 'rg --column --line-number --no-heading --color=always --smart-case %s || true'
       let initial_command = printf(command_fmt, shellescape(a:query))
@@ -484,37 +622,6 @@
       call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
     endfunction
     command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
-
-    function! FloatingPaddedFZF()
-      let width  = min([&columns - 4, max([80, &columns - 20])])
-      let height = min([&lines - 4, max([20, &lines - 10])])
-      let top    = ((&lines - height) / 2) - 1
-      let left   = (&columns - width) / 2
-      let opts   = { 'relative': 'editor', 'row': top, 'col': left, 'width': width, 'height': height, 'style': 'minimal' }
-
-      let line  = repeat(" ", width)
-      let lines = repeat([line], height)
-
-      let s:buf = nvim_create_buf(v:false, v:true)
-      call nvim_buf_set_lines(s:buf, 0, -1, v:true, lines)
-      call nvim_open_win(s:buf, v:true, opts)
-      set winhl=Normal:Floating
-
-      let opts.row    += 1
-      let opts.height -= 2
-      let opts.col    += 2
-      let opts.width  -= 4
-
-      call nvim_open_win(nvim_create_buf(v:false, v:true), v:true, opts)
-      au BufWipeout <buffer> exe 'bw '.s:buf
-    endfunction
-
-    augroup FzfFixes
-      autocmd!
-      " Ensure ESC is properly mapped for FZF
-      autocmd FileType fzf tnoremap <Esc> <c-c>
-      autocmd FileType fzf tnoremap q q
-    augroup END
   "}}}
   " GITGUTTER {{{
     let g:gitgutter_sign_added = '▌'
@@ -625,144 +732,15 @@
   " }}}
 " }}}
 
-" Functions {{{
-  " RESIZE MODE {{{
-    let g:resize_active=0
-    function! Switch_resize_keys()
-      if g:resize_active == 0
-        let g:resize_active = 1
-        " ESC should exit
-        nnoremap <esc> :call Switch_resize_keys()<CR>
-        " Switch to resize keys
-        nnoremap h <C-w><
-        nnoremap j <C-w>-
-        nnoremap k <C-w>+
-        nnoremap l <C-w>>
-        " Switch to window moving keys
-        nnoremap H <C-w>H
-        nnoremap J <C-w>J
-        nnoremap K <C-w>K
-        nnoremap L <C-w>L
-        nnoremap = <C-w>=
-        nnoremap _ <C-w>_
-        nnoremap + <C-w><bar>
-        echom 'Resize Mode'
-      else
-        let g:resize_active = 0
-        " Switch back to 'normal' keys
-        nnoremap <esc> <esc>
-        nnoremap h h
-        nnoremap k gk
-        nnoremap j gj
-        nnoremap l l
-        nnoremap K {
-        nnoremap J }
-        nnoremap H ^
-        nnoremap L $
-        nnoremap = =
-        nnoremap _ _
-        nnoremap + +
-        echom ''
-      endif
-    endfunction
-    nnoremap <silent> <Leader>r :call Switch_resize_keys()<CR>
-  " }}}
-  " CLEAN UI FOR TERMINAL {{{
-    " Enables UI styles suitable for terminals etc
-    function! CleanUIforTerm() abort
-      echo ''
-      setlocal listchars=
-        \ nonumber
-        \ norelativenumber
-        \ nowrap
-        \ winfixwidth
-        \ laststatus=0
-        \ noshowmode
-        \ noruler
-        \ scl=no
-      autocmd BufLeave <buffer> set laststatus=2 showmode ruler
-    endfunction
-  " }}}
-  " TERMINAL DRAWER {{{
-    " depends on: CLEAN UI and Terminal Handling
-    let g:term_buf = 0
-    let g:term_win = 0
-    function! TermToggle(height)
-        if win_gotoid(g:term_win)
-            hide
-        else
-            botright new
-            exec "resize " . a:height
-            try
-                exec "buffer " . g:term_buf
-            catch
-                call termopen($SHELL, {"detach": 0})
-                let g:term_buf = bufnr("")
-            endtry
-
-            " Terminal go back to normal mode
-            tnoremap <Esc> <C-\><C-n>
-            tnoremap q q
-            call CleanUIforTerm()
-            startinsert!
-            let g:term_win = win_getid()
-        endif
-    endfunction
-    " Toggle terminal on/off (neovim)
-    nnoremap <silent><leader>tt :call TermToggle(12)<CR>
-    tnoremap <silent><leader>tt <C-\><C-n>:call TermToggle(12)<CR>
-  " }}}
-  " LAZYGIT {{{
-    function! FloatingLG()
-      let buf        = nvim_create_buf(v:false, v:true)
-      let height     = float2nr(&lines * 0.88)
-      let width      = float2nr(&columns * 0.9)
-      let horizontal = float2nr((&columns - width) / 2)
-      let vertical   = 2
-      let opts       = {
-            \ 'relative': 'editor',
-            \ 'row':      vertical,
-            \ 'col':      horizontal,
-            \ 'width':    width,
-            \ 'height':   height,
-            \ 'style':    'minimal'
-            \ }
-
-      call setbufvar(buf, '&signcolumn', 'no')
-      call nvim_open_win(buf, v:true, opts)
-    endfunction
-
-    let g:lazygit_buf = 0
-    let g:lazygit_win = 0
-    function! LazyGitToggle()
-        if win_gotoid(g:lazygit_win)
-            hide
-        else
-            call FloatingLG()
-            try
-                exec "buffer " . g:lazygit_buf
-            catch
-                call termopen('lazygit', {"detach": 0})
-                let g:lazygit_buf = bufnr("")
-            endtry
-            startinsert!
-            " Map esc and q to close
-            tnoremap <Esc> <C-\><C-n>:q<cr>
-            tnoremap q <C-\><C-n>:q<cr>
-            let g:lazygit_win = win_getid()
-        endif
-    endfunction
-
-    nnoremap <silent><leader>g :call LazyGitToggle()<cr>
-    tnoremap <silent><leader>g <C-\><C-n>:call LazyGitToggle()<CR>
-  " }}}
-" }}}
-
 " Language Settings {{{
   " Ruby {{{
     let ruby_operators = 1
     let ruby_pseudo_operators = 1
   " }}}
+" }}}
+
+" Snippits {{{
+  inoremap ;do do<space>\|\|<cr>end<up><up><c-o>$<left>
 " }}}
 
 " Colorscheme & Highlights {{{
