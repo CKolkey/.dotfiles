@@ -210,6 +210,9 @@
   " }}}
   " TERMINAL DRAWER {{{
     " depends on: CLEAN UI and Terminal Handling
+    nnoremap <silent><leader>tt           :call ToggleTerminalDrawer(12)<CR>
+    tnoremap <silent><leader>tt <C-\><C-n>:call ToggleTerminalDrawer(12)<CR>
+
     let g:term_buf = 0
     let g:term_win = 0
     function! ToggleTerminalDrawer(height)
@@ -225,20 +228,14 @@
                 let g:term_buf = bufnr("")
             endtry
 
-            " First esc takes you to normal mode, second escape closes buffer
             tnoremap <buffer><Esc> <C-\><C-n>
             nnoremap <buffer><silent><Esc> :q<cr>
             nnoremap <buffer><silent> q :q<CR>
-
             startinsert!
             call CleanUIforTerm()
-
             let g:term_win = win_getid()
         endif
     endfunction
-
-    nnoremap <silent><leader>t           :call ToggleTerminalDrawer(12)<CR>
-    tnoremap <silent><leader>t <C-\><C-n>:call ToggleTerminalDrawer(12)<CR>
   " }}}
   " LAZYGIT {{{
     function! ToggleLazyGit()
