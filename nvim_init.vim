@@ -51,12 +51,6 @@
 " }}}
 
 " General Settings {{{
-  " Cursor Settings {{{
-    " UNDERSCORE for replace, BOX for normal, PIPE for insert
-    let &t_SI = "\<Esc>[6 q"
-    let &t_SR = "\<Esc>[4 q"
-    let &t_EI = "\<Esc>[2 q"
-  " }}}
   filetype plugin indent on
   set cursorline            " Highlight cursor line
   set number                " Show line number
@@ -161,6 +155,12 @@
       autocmd TermOpen * setlocal listchars= nonumber norelativenumber | startinsert
     augroup END
   " }}}
+  " EASYQUIT {{{
+    augroup easyquit
+      autocmd!
+      autocmd Filetype help nnoremap <buffer> q :q<CR>
+    augroup END
+  " }}}
 " }}}
 
 " Functions {{{
@@ -237,10 +237,10 @@
           let g:terminal_drawer.buffer_id = bufnr("")
         else
           split
-          exec "buffer " g:terminal_drawer.buffer_id
+          exec "buffer" g:terminal_drawer.buffer_id
         endif
 
-        exec "resize 12"
+        exec "resize" float2nr(&lines * 0.2)
         call CleanUIforTerm()
         startinsert!
         let g:terminal_drawer.win_id = win_getid()
@@ -322,7 +322,7 @@
 " }}}
 
 " Key Mappings {{{
-  let mapleader = "\\"
+  let mapleader = ","
 
   nnoremap <leader>vi :tabe $MYVIMRC<cr>
   nnoremap <leader>ut :UndotreeToggle<cr>
@@ -339,11 +339,9 @@
   " rebinds semi-colon in normal mode.
   nnoremap ; :
 
-  augroup easyquit
-    autocmd!
-    " Bind `q` to close the buffer for help files
-    autocmd Filetype help nnoremap <buffer> q :q<CR>
-  augroup END
+  nnoremap <f7> :bprevious<cr>
+  nnoremap <f8> :tabnext<cr>
+  nnoremap <f9> :bnext<cr>
 
   " Change text without putting the text into register,
   nnoremap c "_c
@@ -429,9 +427,6 @@
   inoremap ˚ <Esc>:m .-2<CR>==gi
   vnoremap ∆ :m '>+1<CR>gv=gv
   vnoremap ˚ :m '<-2<CR>gv=gv
-
-  " Output the current syntax group
-  nnoremap <f10> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans <' . synIDattr(synID(line("."),col("."),0),"name") . "> lo <" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<cr>
 " }}}
 
 " Plugin Settings & Mappings {{{
@@ -454,6 +449,7 @@
     nnoremap <leader>an :ALENextWrap<CR>
     nnoremap <leader>ap :ALEPreviousWrap<CR>
     nnoremap <leader>af :ALEFix<CR>
+    nnoremap <f10> :ALEFix<CR>
 
     let g:ale_linters = {
     \   'javascript': ['eslint'],
