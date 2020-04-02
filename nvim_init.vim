@@ -110,29 +110,30 @@
       set termguicolors
     endif
   endif
+" }}}
 
-  " Autoreload changed files
-  set autoread
-  augroup autoreadfiles
-    autocmd!
-    autocmd CursorHold,CursorHoldI * checktime
-    autocmd FileChangedShellPost * echohl WarningMsg | echo "File changed on disk - Buffer reloaded" | echohl None
-  augroup END
-
-  " Relative line numbers in Normal mode, absolute numbers in Insert mode
-  augroup numbertoggle
-    autocmd!
-    " autocmd WinEnter,BufEnter,FocusGained,InsertLeave * set relativenumber
-    " autocmd WinLeave,BufLeave,FocusLost,InsertEnter   * set norelativenumber
-    autocmd InsertLeave * set relativenumber
-    autocmd InsertEnter * set norelativenumber
-  augroup END
-
-  " Autosource VIMRC on save
-  augroup autosource
-    autocmd!
-    autocmd BufWritePost $MYVIMRC nested source $MYVIMRC
-  augroup END
+" Autocommands {{{
+" Autoreload changed files {{{
+    set autoread
+    augroup autoreadfiles
+      autocmd!
+      autocmd CursorHold,CursorHoldI * checktime
+      autocmd FileChangedShellPost * echohl WarningMsg | echo "File changed on disk - Buffer reloaded" | echohl None
+    augroup END
+" }}}
+  " Relative line numbers in Normal mode, absolute numbers in Insert mode {{{
+    augroup numbertoggle
+      autocmd!
+      autocmd InsertLeave * set relativenumber
+      autocmd InsertEnter * set norelativenumber
+    augroup END
+  " }}}
+  " Autosource VIMRC on save {{{
+    augroup autosource
+      autocmd!
+      autocmd BufWritePost $MYVIMRC nested source $MYVIMRC
+    augroup END
+  " }}}
 " }}}
 
 " Cursor Settings {{{
