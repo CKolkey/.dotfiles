@@ -34,7 +34,7 @@
     Plug 'skywind3000/gutentags_plus'
     Plug 'majutsushi/tagbar'
 
-    Plug 'junegunn/fzf', { 'do': './install --bin' }
+    Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'junegunn/fzf.vim'
 
     Plug 'vim-airline/vim-airline'
@@ -436,7 +436,6 @@
     endfunction
 
     let g:deoplete#enable_at_startup = 1
-
     call deoplete#custom#option({
       \ 'num_processes' : -1,
       \ 'max_list'      : 20,
@@ -456,7 +455,7 @@
     let $FZF_DEFAULT_COMMAND = 'rg --files --no-ignore-vcs --hidden -g "!{node_modules,.git}"'
     let $FZF_DEFAULT_OPTS    = ' --color=dark --color=fg:15,bg:-1,hl:1,fg+:#ffffff,bg+:0,hl+:1 --color=info:0,prompt:0,pointer:12,marker:4,spinner:11,header:-1 --layout=reverse  --margin=1,4'
 
-    let g:fzf_layout = { 'window': 'call FloatingFZF()' }
+    let g:fzf_layout = { 'window': 'call FloatingPaddedFZF()' }
     let g:fzf_action = {
           \ 'ctrl-s': 'split',
           \ 'ctrl-v': 'vsplit',
@@ -486,23 +485,36 @@
     endfunction
     command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
 
-    function! FloatingFZF()
-      let buf        = nvim_create_buf(v:false, v:true)
-      call setbufvar(buf, '&signcolumn', 'no')
-      let height     = float2nr(25)
-      let width      = float2nr(&columns * 0.9)
-      let horizontal = float2nr((&columns - width) / 2)
-      let vertical   = 3
-      let opts       = {
-            \ 'relative': 'editor',
-            \ 'row':      vertical,
-            \ 'col':      horizontal,
-            \ 'width':    width,
-            \ 'height':   height,
-            \ 'style':    'minimal'
-            \ }
-      call nvim_open_win(buf, v:true, opts)
+    function! FloatingPaddedFZF()
+      let width  = min([&columns - 4, max([80, &columns - 20])])
+      let height = min([&lines - 4, max([20, &lines - 10])])
+      let top    = ((&lines - height) / 2) - 1
+      let left   = (&columns - width) / 2
+      let opts   = { 'relative': 'editor', 'row': top, 'col': left, 'width': width, 'height': height, 'style': 'minimal' }
+
+      let line  = repeat(" ", width)
+      let lines = repeat([line], height)
+
+      let s:buf = nvim_create_buf(v:false, v:true)
+      call nvim_buf_set_lines(s:buf, 0, -1, v:true, lines)
+      call nvim_open_win(s:buf, v:true, opts)
+      set winhl=Normal:Floating
+
+      let opts.row    += 1
+      let opts.height -= 2
+      let opts.col    += 2
+      let opts.width  -= 4
+
+      call nvim_open_win(nvim_create_buf(v:false, v:true), v:true, opts)
+      au BufWipeout <buffer> exe 'bw '.s:buf
     endfunction
+
+    augroup FzfFixes
+      autocmd!
+      " Ensure ESC is properly mapped for FZF
+      autocmd FileType fzf tnoremap <Esc> <c-c>
+      autocmd FileType fzf tnoremap q q
+    augroup END
   "}}}
   " GITGUTTER {{{
     let g:gitgutter_sign_added = '▌'
