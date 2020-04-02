@@ -667,6 +667,95 @@
     endfunction
     nnoremap <silent> <Leader>r :call Switch_resize_keys()<CR>
   " }}}
+  " CLEAN UI FOR TERMINAL {{{
+    " Enables UI styles suitable for terminals etc
+    function! CleanUIforTerm() abort
+      echo ''
+      setlocal listchars=
+        \ nonumber
+        \ norelativenumber
+        \ nowrap
+        \ winfixwidth
+        \ laststatus=0
+        \ noshowmode
+        \ noruler
+        \ scl=no
+      autocmd BufLeave <buffer> set laststatus=2 showmode ruler
+    endfunction
+  " }}}
+  " TERMINAL DRAWER {{{
+    " depends on: CLEAN UI and Terminal Handling
+    let g:term_buf = 0
+    let g:term_win = 0
+    function! TermToggle(height)
+        if win_gotoid(g:term_win)
+            hide
+        else
+            botright new
+            exec "resize " . a:height
+            try
+                exec "buffer " . g:term_buf
+            catch
+                call termopen($SHELL, {"detach": 0})
+                let g:term_buf = bufnr("")
+            endtry
+
+            " Terminal go back to normal mode
+            tnoremap <Esc> <C-\><C-n>
+            tnoremap q q
+            call CleanUIforTerm()
+            startinsert!
+            let g:term_win = win_getid()
+        endif
+    endfunction
+    " Toggle terminal on/off (neovim)
+    nnoremap <silent><leader>tt :call TermToggle(12)<CR>
+    tnoremap <silent><leader>tt <C-\><C-n>:call TermToggle(12)<CR>
+  " }}}
+  " LAZYGIT {{{
+    function! FloatingLG()
+      let buf        = nvim_create_buf(v:false, v:true)
+      let height     = float2nr(&lines * 0.88)
+      let width      = float2nr(&columns * 0.9)
+      let horizontal = float2nr((&columns - width) / 2)
+      let vertical   = 2
+      let opts       = {
+            \ 'relative': 'editor',
+            \ 'row':      vertical,
+            \ 'col':      horizontal,
+            \ 'width':    width,
+            \ 'height':   height,
+            \ 'style':    'minimal'
+            \ }
+
+      call setbufvar(buf, '&signcolumn', 'no')
+      call nvim_open_win(buf, v:true, opts)
+    endfunction
+
+    let g:lazygit_buf = 0
+    let g:lazygit_win = 0
+    function! LazyGitToggle()
+        if win_gotoid(g:lazygit_win)
+            hide
+        else
+            call FloatingLG()
+            try
+                exec "buffer " . g:lazygit_buf
+            catch
+                call termopen('lazygit', {"detach": 0})
+                let g:lazygit_buf = bufnr("")
+            endtry
+            startinsert!
+            " Map esc and q to close
+            tnoremap <Esc> <C-\><C-n>:q<cr>
+            tnoremap q <C-\><C-n>:q<cr>
+            let g:lazygit_win = win_getid()
+        endif
+    endfunction
+
+    nnoremap <silent><leader>g :call LazyGitToggle()<cr>
+    tnoremap <silent><leader>g <C-\><C-n>:call LazyGitToggle()<CR>
+  " }}}
 " }}}
 
 " Language Settings {{{
