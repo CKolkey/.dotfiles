@@ -74,7 +74,7 @@
   set belloff=all           " don't flash
   set pastetoggle=<F2>      " turn on paste mode with F2
   set noswapfile
-  set undodir="~/.cache/nvim/undo"
+  set undodir=$HOME/.cache/nvim/undo
   set undofile              " Persistant Undo
   set splitbelow            " split below, not above
   set splitright            " split right, not left
@@ -307,15 +307,10 @@
     let g:ale_sign_column_always = 1
     let g:ale_sign_error         = '!!'
     let g:ale_sign_warning       = '>>'
+    let g:ale_lint_delay         = 0
 
-    " Lint always in Normal Mode
-    let g:ale_lint_on_text_changed = 'normal'
-
-    " Lint when leaving Insert Mode but don't lint when in Insert Mode
-    let g:ale_lint_on_insert_leave = 1
-
+    let g:ale_ruby_solargraph_executable = "~/.rbenv/shims/solargraph"
     " Set ALE's 200ms delay to zero
-    let g:ale_lint_delay = 0
   "}}}
   " CLEVER-F {{{
     let g:clever_f_smart_case        = 1
