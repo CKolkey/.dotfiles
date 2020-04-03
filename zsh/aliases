@@ -1,6 +1,8 @@
 alias aliases="v ~/.dotfiles/zsh/aliases"
 alias kittyconf="v ~/.dotfiles/kitty.conf"
-alias aws-ssh="ssh -i ~/Code/aws-keypair-dev.pem ubuntu@$(aws ec2 describe-instances | rg "i-018f42b3bbecf83d0" | awk '{print $14}')"
+alias ssh-aws="ssh -i ~/Code/aws-keypair-dev.pem ubuntu@$(aws ec2 describe-instances | rg "i-018f42b3bbecf83d0" | awk '{print $14}')"
+alias aws-url="echo "http://$(aws ec2 describe-instances | rg 'i-018f42b3bbecf83d0' | awk '{print $14}'):3000" | pbcopy"
+alias open-aws="open http://$(aws ec2 describe-instances | rg 'i-018f42b3bbecf83d0' | awk '{print $14}'):3000"
 alias lg="lazygit"
 
 alias zshrc="v ~/.zshrc"
