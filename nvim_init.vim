@@ -152,7 +152,8 @@
   " TERMINAL BEHAVIOR {{{
     augroup TerminalBehavior
       autocmd!
-      autocmd TermOpen * setlocal listchars= nonumber norelativenumber | startinsert
+      autocmd TermOpen * setlocal listchars= nonumber norelativenumber nowrap winfixwidth laststatus=0 noruler scl=no noshowmode
+      autocmd TermOpen * startinsert
     augroup END
   " }}}
   " EASYQUIT {{{
@@ -205,22 +206,6 @@
     endfunction
     nnoremap <silent> <Leader>r :call ToggleResizeMode()<CR>
   " }}}
-  " CLEAN UI FOR TERMINAL {{{
-    " Enables UI styles suitable for terminals etc
-    function! CleanUIforTerm() abort
-      echo ''
-      setlocal listchars=
-        \ nonumber
-        \ norelativenumber
-        \ nowrap
-        \ winfixwidth
-        \ laststatus=0
-        \ noshowmode
-        \ noruler
-        \ scl=no
-      autocmd BufLeave <buffer> set laststatus=2 showmode ruler
-    endfunction
-  " }}}
   " TERMINAL DRAWER {{{
     " depends on: CLEAN UI and Terminal Behavior
     nnoremap <silent><leader>\           :call ToggleTerminalDrawer()<CR>
@@ -230,18 +215,20 @@
     function! ToggleTerminalDrawer() abort
       if win_gotoid(g:terminal_drawer.win_id)
         hide
+        set laststatus=2 showmode ruler
       else
+        botright new
         if !g:terminal_drawer.buffer_id
-          botright new
           call termopen($SHELL, {"detach": 0})
           let g:terminal_drawer.buffer_id = bufnr("")
         else
-          split
           exec "buffer" g:terminal_drawer.buffer_id
+          call RemoveEmptyBuffers()
         endif
 
-        exec "resize" float2nr(&lines * 0.2)
-        call CleanUIforTerm()
+        exec "resize" float2nr(&lines * 0.25)
+        setlocal laststatus=0 noshowmode noruler
+        echo ''
         startinsert!
         let g:terminal_drawer.win_id = win_getid()
 
@@ -253,6 +240,7 @@
   " }}}
   " LAZYGIT {{{
     function! ToggleLazyGit()
+      echo "Loaded Lazygit"
       call ToggleTerm('lazygit')
     endfunction
 
@@ -319,6 +307,14 @@
       set winhighlight=Normal:ActiveWindow,NormalNC:InactiveWindow
     endfunction
   " }}}
+  " REMOVE EMPTY BUFFERS {{{
+    function! RemoveEmptyBuffers()
+      let buffers = filter(range(1, bufnr('$')), 'buflisted(v:val) && empty(bufname(v:val)) && bufwinnr(v:val)<0 && !getbufvar(v:val, "&mod")')
+      if !empty(buffers)
+          silent exe 'bw ' . join(buffers, ' ')
+      endif
+    endfunction
+  " }}}
 " }}}
 
 " Key Mappings {{{
@@ -328,6 +324,7 @@
   nnoremap <leader>ut :UndotreeToggle<cr>
   nnoremap <leader>pu :PlugUpdate<cr>
   nnoremap <leader>pi :PlugInstall<cr>
+  nnoremap <leader>h  :Helptags<cr>
   nnoremap <leader>bb obinding.pry<esc>:w<cr>^
   nnoremap <leader>fr :%s///gc<left><left><left><left>
   nnoremap <leader>j J
@@ -476,7 +473,6 @@
     let g:ale_lint_delay         = 0
 
     let g:ale_ruby_solargraph_executable = "~/.rbenv/shims/solargraph"
-    " Set ALE's 200ms delay to zero
   "}}}
   " CLEVER-F {{{
     let g:clever_f_smart_case        = 1
