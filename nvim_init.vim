@@ -152,8 +152,9 @@
   " TERMINAL BEHAVIOR {{{
     augroup TerminalBehavior
       autocmd!
-      autocmd TermOpen * setlocal listchars= nonumber norelativenumber nowrap winfixwidth laststatus=0 noruler scl=no noshowmode
+      autocmd TermOpen * setlocal listchars= nonumber norelativenumber nowrap winfixwidth laststatus=0 noruler signcolumn=no noshowmode
       autocmd TermOpen * startinsert
+      autocmd TermClose * set laststatus=2 showmode ruler
     augroup END
   " }}}
   " EASYQUIT {{{
@@ -228,6 +229,7 @@
 
         exec "resize" float2nr(&lines * 0.25)
         setlocal laststatus=0 noshowmode noruler
+        setlocal nobuflisted
         echo ''
         startinsert!
         let g:terminal_drawer.win_id = win_getid()
@@ -244,8 +246,8 @@
       call ToggleTerm('lazygit')
     endfunction
 
-    nnoremap <silent><leader>g :call ToggleLazyGit()<cr>
-    tnoremap <silent><leader>g <C-\><C-n>:call ToggleLazyGit()<CR>
+    nnoremap <silent><leader>l :call ToggleLazyGit()<cr>
+    tnoremap <silent><leader>l <C-\><C-n>:call ToggleLazyGit()<CR>
   " }}}
   " CREATE FLOATING WINDOW {{{
     function! CreateCenteredFloatingWindow()
