@@ -74,8 +74,6 @@
   set belloff=all           " don't flash
   set pastetoggle=<F2>      " turn on paste mode with F2
   set noswapfile
-  set undodir=$HOME/.cache/nvim/undo
-  set undofile              " Persistant Undo
   set splitbelow            " split below, not above
   set splitright            " split right, not left
   set foldmethod=marker     " Fold code between {{{ and }}}
@@ -87,13 +85,29 @@
   set winheight=10
   set list
   set listchars=tab:››,nbsp:·,trail:•,extends:»,precedes:«
-
-  set hidden
-  set nobackup
-  set nowritebackup
+  set shortmess=atIAc       "Hidden startup messages
+  set hidden         " allows you to nav away from an unsaved buffer
   set updatetime=300 " You will have bad experience for diagnostic messages when it's default 4000.
-  set shortmess+=c   " don't give ins-completion-menu messages.
+  " set shortmess+=c   " don't give ins-completion-menu messages.
   set signcolumn=yes " always show signcolumns
+
+  set backup
+  set undofile              " Persistant Undo
+  set undodir=$HOME/.cache/nvim/undo
+  set backupdir=$HOME/.cache/nvim/backup
+
+  set wildmenu
+  set wildmode=full
+  set wildoptions-=pum
+  set wildignore+=*.so,*.pyc,*.png,*.jpg,*.gif,*.jpeg,*.ico,*.pdf
+  set wildignore+=*.wav,*.mp4,*.mp3
+  set wildignore+=*.o,*.out,*.obj,.git,*.rbc,*.rbo,*.class,.svn,*.gem
+  set wildignore+=*.zip,*.tar.gz,*.tar.bz2,*.rar,*.tar.xz
+  set wildignore+=*/vendor/gems/*,*/vendor/cache/*,*/.bundle/*,*/.sass-cache/*
+  set wildignore+=*.swp,*~,._*
+  set wildignore+=_pycache_,.DS_Store,.vscode,.localized
+  set wildignore+=.cache,node_modules,package-lock.json,yarn.lock,dist,.git
+  set wildignore+=.vimruncmd
 
   if has("multi_byte")
     set encoding=utf-8
@@ -126,7 +140,7 @@
     set autoread
     augroup autoreadfiles
       autocmd!
-      autocmd CursorHold,CursorHoldI * checktime
+      autocmd FocusGained,BufEnter * silent! checktime
       autocmd FileChangedShellPost * echohl WarningMsg | echo "File changed on disk - Buffer reloaded" | echohl None
     augroup END
 " }}}
@@ -246,8 +260,8 @@
       call ToggleTerm('lazygit')
     endfunction
 
-    nnoremap <silent><leader>l :call ToggleLazyGit()<cr>
-    tnoremap <silent><leader>l <C-\><C-n>:call ToggleLazyGit()<CR>
+    nnoremap <silent><leader>ll :call ToggleLazyGit()<cr>
+    tnoremap <silent><leader>ll <C-\><C-n>:call ToggleLazyGit()<CR>
   " }}}
   " CREATE FLOATING WINDOW {{{
     function! CreateCenteredFloatingWindow()
@@ -320,7 +334,7 @@
 " }}}
 
 " Key Mappings {{{
-  let mapleader = ","
+  let mapleader = "\\"
 
   nnoremap <leader>vi :tabe $MYVIMRC<cr>
   nnoremap <leader>ut :UndotreeToggle<cr>
@@ -334,6 +348,8 @@
   " More sane vertical navigation - respects columns
   nnoremap k gk
   nnoremap j gj
+  vnoremap k gk
+  vnoremap j gj
 
   " rebinds semi-colon in normal mode.
   nnoremap ; :
@@ -377,13 +393,8 @@
   " easier navigation in normal / visual / operator pending mode
   noremap K     {
   noremap J     }
-  noremap H     ^
-  noremap L     $
-
-  " alt-; repeats a motion in the same direction (f, t, F, T)
-  " alt-" repeats motion in opposite direction
-  nnoremap … ,
-  nnoremap æ ;
+  noremap H     g^
+  noremap L     g_
 
   " easier one-off navigation in insert mode
   inoremap <C-k> <Up>
@@ -467,7 +478,7 @@
     \}
 
     let g:ale_fix_on_save        = 1
-    let g:ale_fix_on_save_ignore = { 'ruby': ['rubocop'] }
+    let g:ale_fix_on_save_ignore = { 'ruby': ['rubocop'], 'javascript': ['eslint', 'prettier'] }
     let g:ale_linters_explicit   = 1
     let g:ale_sign_column_always = 1
     let g:ale_sign_error         = '!!'
@@ -650,11 +661,11 @@
     command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
   "}}}
   " GITGUTTER {{{
-    let g:gitgutter_sign_added = '▌'
-    let g:gitgutter_sign_modified = '▌'
-    let g:gitgutter_sign_removed = '▁'
-    let g:gitgutter_sign_removed_first_line = '▌'
-    let g:gitgutter_sign_modified_removed = '▌'
+    let g:gitgutter_sign_added             = '▌'
+    let g:gitgutter_sign_modified           = '▌'
+    let g:gitgutter_sign_modified_removed  = '▌'
+    let g:gitgutter_sign_removed_first_line = '▔'
+    let g:gitgutter_sign_removed           = '▁'
   " }}}
   " GUTENTAGS & TAGBAR{{{
     " Tagbar Plugin Binding
