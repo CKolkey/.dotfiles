@@ -237,11 +237,11 @@
           call termopen($SHELL, {"detach": 0})
           let g:terminal_drawer.buffer_id = bufnr("")
         else
-          exec "buffer" g:terminal_drawer.buffer_id
+          exec 'buffer' g:terminal_drawer.buffer_id
           call RemoveEmptyBuffers()
         endif
 
-        exec "resize" float2nr(&lines * 0.25)
+        exec 'resize' float2nr(&lines * 0.25)
         setlocal laststatus=0 noshowmode noruler
         setlocal nobuflisted
         echo ''
