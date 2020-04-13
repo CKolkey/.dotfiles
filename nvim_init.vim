@@ -16,7 +16,9 @@
     Plug 'justinmk/vim-sneak'
     Plug 'sheerun/vim-polyglot'
     Plug 'andymass/vim-matchup'
+    Plug 'rrethy/vim-hexokinase', { 'do': 'make hexokinase' }
     Plug 'airblade/vim-gitgutter'
+    Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
     Plug 'chaoren/vim-wordmotion'
     Plug 'junegunn/vim-easy-align'
     Plug 'AndrewRadev/splitjoin.vim'
@@ -462,20 +464,20 @@
     nnoremap <f10> :ALEFix<CR>
 
     let g:ale_linters = {
-    \   'javascript': ['eslint'],
-    \   'ruby':       ['rubocop', 'solargraph'],
-    \}
+      \   'javascript': ['eslint'],
+      \   'ruby':       ['rubocop'],
+      \}
 
     let g:ale_fixers = {
-    \   '*':          ['remove_trailing_lines', 'trim_whitespace'],
-    \   'ruby':       ['rubocop'],
-    \   'javascript': ['prettier', 'eslint'],
-    \   'css' :       ['prettier'],
-    \   'html' :      ['prettier'],
-    \   'markdown' :  ['prettier'],
-    \   'yaml':       ['prettier'],
-    \   'json':       ['prettier'],
-    \}
+      \   '*':          ['remove_trailing_lines', 'trim_whitespace'],
+      \   'ruby':       ['rubocop'],
+      \   'javascript': ['prettier', 'eslint'],
+      \   'css' :       ['prettier'],
+      \   'html' :      ['prettier'],
+      \   'markdown' :  ['prettier'],
+      \   'yaml':       ['prettier'],
+      \   'json':       ['prettier'],
+      \}
 
     let g:ale_fix_on_save        = 1
     let g:ale_fix_on_save_ignore = { 'ruby': ['rubocop'], 'javascript': ['eslint', 'prettier'] }
@@ -484,8 +486,6 @@
     let g:ale_sign_error         = '!!'
     let g:ale_sign_warning       = '>>'
     let g:ale_lint_delay         = 0
-
-    let g:ale_ruby_solargraph_executable = "~/.rbenv/shims/solargraph"
   "}}}
   " CLEVER-F {{{
     let g:clever_f_smart_case        = 1
@@ -614,8 +614,14 @@
     call deoplete#custom#option({
       \ 'num_processes' : -1,
       \ 'max_list'      : 20,
-      \ 'sources'       : { '_': ['ale', 'around', 'buffer', 'file', 'syntax'] }
+      \ 'sources'       : {
+        \ '_': ['tag', 'buffer', 'file', 'syntax'],
+        \ 'ruby': ['tag', 'LanguageClient', 'buffer', 'file', 'syntax']
+        \ }
       \ })
+    call deoplete#custom#option('auto_complete_delay', 0)
+    call deoplete#custom#option('smart_case', v:true)
+    call deoplete#custom#option('min_pattern_length', 1)
   " }}}
   " EASYALIGN{{{
     xnoremap <leader>ea <Plug>(EasyAlign)
@@ -737,6 +743,18 @@
       \ ]
 
   " }}}
+  " HEXOKINASE (COLORIZER) {{{
+    let g:Hexokinase_highlighters = [ 'backgroundfull' ]
+    let g:Hexokinase_ftEnabled    = ['css', 'html', 'javascript', 'sass', 'slim', 'vim']
+    let g:Hexokinase_optInPatterns = [
+    \     'full_hex',
+    \     'triple_hex',
+    \     'rgb',
+    \     'rgba',
+    \     'hsl',
+    \     'hsla'
+    \ ]
+  " }}}
   " MATCHUP{{{
     augroup matchup_matchparen_highlight
       autocmd!
@@ -747,6 +765,15 @@
     let g:matchup_matchparen_deferred  = 1
     let g:matchup_matchparen_offscreen = {}
   "}}}
+    " LSP Language Server Client {{{
+      nnoremap <silent> <leader>rn :call LanguageClient#textDocument_rename()<CR>
+      nnoremap <leader>cm :call LanguageClient_contextMenu()<CR>
+      let g:LanguageClient_serverCommands = {
+        \ 'ruby': ['~/.rbenv/shims/solargraph', 'stdio'],
+        \ }
+      let g:LanguageClient_autoStart = 1
+      let g:LanguageClient_autoStop  = 0
+    " }}}
   " SNEAK {{{
     let g:sneak#label  = 0
     let g:sneak#s_next = 1
